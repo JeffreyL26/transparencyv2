@@ -38,7 +38,7 @@ optionalem **Budget** sammeln (laufende Reise-Rechnung).
 | Fonts | Plus Jakarta Sans + Space Grotesk (gebündelt, OFL — siehe `app/src/main/assets/licenses/`) |
 | Flaggen | 156 lokale PNGs (`app/src/main/assets/flags/`, von flagcdn.com), rund maskiert |
 | Min-SDK | 26 · Target/Compile-SDK 36 · Portrait-lock |
-| App-Icon | Scanner-Badge aus `branding/icon-v1.svg` — adaptiv (dunkler Verlauf + Vordergrund) und als Legacy-Mipmaps gerendert |
+| App-Icon | Scanner-Badge aus `branding/icon-v1.svg` — adaptives Icon als **VectorDrawable** (dunkler Verlauf-Hintergrund + Vektor-Vordergrund, `€` als Pfad aus Space Grotesk); Vordergrund in die Adaptive-Sicherheitszone skaliert, damit maskierende Launcher (Samsung-Squircle) die Eck-Klammern nicht beschneiden. Voll-Design zusätzlich als Legacy-Mipmaps + Play-Store-PNG |
 
 ## Build
 
