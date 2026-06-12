@@ -1,0 +1,101 @@
+package com.transparency.fxlens.ui.components
+
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.transparency.fxlens.data.CurrencyMeta
+import com.transparency.fxlens.ui.theme.Grotesk
+import com.transparency.fxlens.ui.theme.Tokens
+import com.transparency.fxlens.ui.theme.Txt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
+
+/**
+ * Runde Flagge (Handoff §14): lokales Asset, rund maskiert,
+ * 1px-Innenrand rgba(0,0,0,0.08) + leichter Schatten.
+ * Ohne Flaggenbild: Symbol-Fallback im Kreis (wie Prototyp).
+ */
+
+private val flagCache = ConcurrentHashMap<String, ImageBitmap>()
+private val flagMisses = ConcurrentHashMap.newKeySet<String>()
+
+@Composable
+private fun rememberFlagBitmap(cc: String?): ImageBitmap? {
+    if (cc == null) return null
+    val context = LocalContext.current
+    val cached = flagCache[cc]
+    val bmp by produceState(initialValue = cached, key1 = cc) {
+        if (value == null && cc !in flagMisses) {
+            value = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.assets.open("flags/$cc.png").use {
+                        BitmapFactory.decodeStream(it).asImageBitmap()
+                    }
+                }.getOrNull().also { decoded ->
+                    if (decoded != null) flagCache[cc] = decoded else flagMisses.add(cc)
+                }
+            }
+        }
+    }
+    return bmp
+}
+
+@Composable
+fun Flag(code: String, size: Dp, modifier: Modifier = Modifier) {
+    val info = remember(code) { CurrencyMeta.info(code) }
+    val bitmap = rememberFlagBitmap(info.cc)
+    Box(
+        modifier = modifier
+            .size(size)
+            .shadow(2.dp, CircleShape, clip = false)
+            .clip(CircleShape)
+            .background(Tokens.SurfaceWarm),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = code,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            Txt(
+                text = info.sym,
+                fontSize = (size.value * 0.34f).coerceIn(8f, 13f).sp,
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = Grotesk,
+                color = Tokens.Ink2,
+                maxLines = 1,
+            )
+        }
+        Box(
+            Modifier
+                .fillMaxSize()
+                .border(1.dp, Color(0x14000000), CircleShape)
+        )
+    }
+}

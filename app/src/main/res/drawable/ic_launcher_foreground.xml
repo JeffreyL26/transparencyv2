@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Globe stroke icon, centered in the adaptive-icon safe zone -->
+    <group
+        android:translateX="42"
+        android:translateY="42">
+        <path
+            android:pathData="M12,3 a9,9 0 1,0 0,18 a9,9 0 1,0 0,-18"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="1.8"
+            android:fillColor="@android:color/transparent" />
+        <path
+            android:pathData="M3,12 L21,12 M12,3 C14.8,6 14.8,18 12,21 M12,3 C9.2,6 9.2,18 12,21"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="1.8"
+            android:fillColor="@android:color/transparent" />
+    </group>
+</vector>
