@@ -67,8 +67,9 @@ private fun rememberFlagBitmap(cc: String?): ImageBitmap? {
 
 @Composable
 fun Flag(code: String, size: Dp, modifier: Modifier = Modifier) {
+    val emoji = CurrencyMeta.emoji(code)
     val info = remember(code) { CurrencyMeta.info(code) }
-    val bitmap = rememberFlagBitmap(info.cc)
+    val bitmap = if (emoji == null) rememberFlagBitmap(info.cc) else null
     Box(
         modifier = modifier
             .size(size)
@@ -77,7 +78,14 @@ fun Flag(code: String, size: Dp, modifier: Modifier = Modifier) {
             .background(Tokens.SurfaceWarm),
         contentAlignment = Alignment.Center,
     ) {
-        if (bitmap != null) {
+        if (emoji != null) {
+            // Custom-Währung: Emoji statt Flagge (§F2).
+            Txt(
+                text = emoji,
+                fontSize = (size.value * 0.5f).coerceIn(12f, 26f).sp,
+                maxLines = 1,
+            )
+        } else if (bitmap != null) {
             Image(
                 bitmap = bitmap,
                 contentDescription = code,

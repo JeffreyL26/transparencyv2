@@ -85,6 +85,29 @@ val IcList: ImageVector by lazy {
     }.build()
 }
 
+/** Sprechblase mit drei Punkten (Sprachauswahl, §F4). */
+val IcChat: ImageVector by lazy {
+    builder("IcChat").apply {
+        strokePath(1.9f) {
+            moveTo(7f, 4f)
+            horizontalLineTo(18f)
+            arcToRelative(3f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = 3f, dy1 = 3f)
+            verticalLineTo(12f)
+            arcToRelative(3f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = -3f, dy1 = 3f)
+            horizontalLineTo(8f)
+            lineTo(4f, 19f)
+            verticalLineTo(7f)
+            arcToRelative(3f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = 3f, dy1 = -3f)
+            close()
+        }
+        fillPath {
+            circle(8.8f, 9.3f, 1.0f)
+            circle(12f, 9.3f, 1.0f)
+            circle(15.2f, 9.3f, 1.0f)
+        }
+    }.build()
+}
+
 /** M6 6l12 12 M18 6 6 18 (2.2) */
 val IcClose: ImageVector by lazy {
     builder("IcClose").apply {

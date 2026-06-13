@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScanConvert</string>
+
+    <!-- gemeinsame Aktionen -->
+    <string name="action_save">حفظ</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_add">إضافة</string>
+    <string name="confirm_delete">هل تريد الحذف فعلاً؟</string>
+
+    <!-- Onboarding -->
+    <string name="onb_title">اختر مفضلاتك</string>
+    <string name="onb_subtitle">حتى 4 عملات للوصول السريع عند التحويل. يمكنك تغيير ذلك لاحقاً في أي وقت.</string>
+    <string name="onb_selected">تم اختيار %1$d/4</string>
+    <string name="onb_min">اختر واحدة على الأقل</string>
+    <string name="onb_go">هيا بنا</string>
+
+    <!-- Glas-Menü -->
+    <string name="menu_from">من</string>
+    <string name="menu_to">إلى</string>
+    <string name="status_live">مباشر</string>
+    <string name="status_offline">غير متصل</string>
+
+    <!-- Scan-Overlay / Ergebnis -->
+    <string name="scan_hint">ضع الرقم داخل الإطار</string>
+    <string name="scan_detected">تم التعرف</string>
+    <string name="scan_rescan">انقر لإعادة المسح</string>
+    <string name="res_converted">بعد التحويل</string>
+    <string name="res_count">تم التعرف على %1$d</string>
+    <string name="from_amount">من %1$s %2$s</string>
+    <string name="from_scanned">تم مسح %1$s</string>
+    <string name="add_to_list">أضف إلى القائمة</string>
+
+    <!-- „Zu Liste hinzufügen" -->
+    <string name="name_optional">الاسم (اختياري)</string>
+    <string name="name_item_placeholder">مثل فندق، عشاء</string>
+    <string name="no_list_in">لا توجد قائمة بعد في %1$s. أنشئ واحدة لتجميع الأسعار بهذه العملة.</string>
+    <string name="new_list_for">قائمة %1$s جديدة</string>
+    <string name="positions">%1$d عناصر</string>
+
+    <!-- Neue Liste -->
+    <string name="create_title">قائمة جديدة</string>
+    <string name="field_name">الاسم</string>
+    <string name="name_list_placeholder">مثل رحلة هونغ كونغ</string>
+    <string name="list_currency">عملة القائمة</string>
+    <string name="fixed">ثابت</string>
+    <string name="budget_optional">الميزانية (اختياري)</string>
+    <string name="create_and_add">إنشاء وإضافة</string>
+    <string name="create_list">إنشاء قائمة</string>
+
+    <!-- Liste bearbeiten -->
+    <string name="edit_list_title">تعديل القائمة</string>
+    <string name="list_name_placeholder">اسم القائمة</string>
+    <string name="delete_list">حذف القائمة</string>
+
+    <!-- Position benennen -->
+    <string name="name_item_title">تسمية العنصر</string>
+    <string name="delete_item">حذف العنصر</string>
+
+    <!-- Eigene Kurse (Custom) -->
+    <string name="custom_title">أسعار مخصصة</string>
+    <string name="custom_max">وصلت إلى الحد الأقصى وهو 5 أسعار مخصصة. احذف واحداً لإفساح المجال.</string>
+    <string name="custom_name_placeholder">مثل رقاقة كازينو</string>
+    <string name="abbrev_optional">اختصار (اختياري)</string>
+    <string name="abbrev_placeholder">مثل CHIP</string>
+    <string name="field_emoji">إيموجي</string>
+    <string name="reference_currency">العملة المرجعية</string>
+    <string name="field_rate">السعر</string>
+    <string name="custom_rate_prefix">1 %1$s =</string>
+    <string name="custom_rate_formula">1 %1$s = %2$s %3$s</string>
+    <string name="custom_default_label">مخصص</string>
+
+    <!-- Währungs-Picker -->
+    <string name="picker_from">العملة الممسوحة</string>
+    <string name="picker_to">العملة الهدف</string>
+    <string name="search_placeholder">ابحث عن عملة أو رمز</string>
+    <string name="section_custom">أسعار مخصصة</string>
+    <string name="custom_rate_add">سعر مخصص</string>
+    <string name="custom_count">تم إنشاء %1$d/5</string>
+    <string name="section_pinned">مثبّت</string>
+    <string name="section_all">كل العملات</string>
+    <string name="no_hits">لا توجد نتائج لـ „%1$s"</string>
+
+    <!-- Listen-Panel -->
+    <string name="lists_title">قوائمي</string>
+    <string name="lists_subtitle">حسابات السفر لكل عملة هدف</string>
+    <string name="no_lists">لا توجد قوائم بعد</string>
+    <string name="no_lists_hint">امسح الأسعار وجمّعها في قائمة بعملتك الهدف — مثل ميزانية سفرك.</string>
+    <string name="positions_currency">%1$d عناصر · %2$s</string>
+    <string name="new_list">قائمة جديدة</string>
+    <string name="total">الإجمالي</string>
+    <string name="positions_label">العناصر</string>
+    <string name="no_items_hint">لم تتم إضافة شيء بعد. امسح سعراً وانقر „أضف إلى القائمة".</string>
+
+    <!-- Budget-Balken -->
+    <string name="budget_prefix">الميزانية </string>
+    <string name="budget_left">%1$s متبقٍ</string>
+    <string name="budget_over">+%1$s زيادة</string>
+
+    <!-- Toast -->
+    <string name="toast_added_to">تمت الإضافة إلى „%1$s"</string>
+
+    <!-- Sprachauswahl -->
+    <string name="language_title">اللغة</string>
+    <string name="lang_de">الألمانية</string>
+    <string name="lang_en">الإنجليزية</string>
+    <string name="lang_es">الإسبانية</string>
+    <string name="lang_fr">الفرنسية</string>
+    <string name="lang_pt">البرتغالية</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_ja">اليابانية</string>
+</resources>

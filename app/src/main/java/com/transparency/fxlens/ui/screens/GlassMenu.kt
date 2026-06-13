@@ -32,16 +32,19 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.transparency.fxlens.R
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.data.FxRates
 import com.transparency.fxlens.domain.PickerSlot
 import com.transparency.fxlens.domain.fmtRate
 import com.transparency.fxlens.ui.components.Flag
 import com.transparency.fxlens.ui.components.Ic
+import com.transparency.fxlens.ui.components.IcChat
 import com.transparency.fxlens.ui.components.IcList
 import com.transparency.fxlens.ui.components.IcSwap
 import com.transparency.fxlens.ui.components.LiveDot
@@ -92,7 +95,7 @@ fun GlassMenu(
                 .height(IntrinsicSize.Min)
         ) {
             ChipColumn(
-                label = "VON",
+                label = stringResource(R.string.menu_from),
                 code = from,
                 open = pickerOpen == PickerSlot.FROM,
                 onClick = { onPick(PickerSlot.FROM) },
@@ -102,7 +105,7 @@ fun GlassMenu(
             SwapColumn(swapAngle = swapAngle, onSwap = onSwap)
             Spacer(Modifier.width(8.dp))
             ChipColumn(
-                label = "ZU",
+                label = stringResource(R.string.menu_to),
                 code = to,
                 open = pickerOpen == PickerSlot.TO,
                 onClick = { onPick(PickerSlot.TO) },
@@ -121,19 +124,24 @@ fun GlassMenu(
                 .padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LiveDot(8.dp)
+            // Punkt pulsiert nur live; offline statisch gedämpft (§1).
+            if (rates.live) {
+                LiveDot(8.dp)
+            } else {
+                Box(Modifier.size(8.dp).clip(CircleShape).background(Tokens.Ink3))
+            }
             Spacer(Modifier.width(12.dp))
             RateText(from = from, to = to, rates = rates)
             Spacer(Modifier.weight(1f))
+            // Online: „LIVE". Verbindung verloren: Datum + Uhrzeit des letzten Stands (§1).
+            val live = stringResource(R.string.status_live)
+            val offline = stringResource(R.string.status_offline)
             val status = when {
-                rates.live -> "LIVE"
-                rates.updatedAt > 0L -> {
-                    val time = remember(rates.updatedAt) {
-                        SimpleDateFormat("HH:mm", Locale.GERMANY).format(Date(rates.updatedAt))
-                    }
-                    "STAND $time"
+                rates.live -> live
+                rates.updatedAt > 0L -> remember(rates.updatedAt) {
+                    SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault()).format(Date(rates.updatedAt))
                 }
-                else -> "OFFLINE"
+                else -> offline
             }
             Txt(
                 status,
@@ -326,5 +334,25 @@ fun EdgeTab(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 .offset(x = 2.dp)
                 .size(22.dp),
         )
+    }
+}
+
+/**
+ * Sprach-Button (§F4): runder Glas-Button mit Sprechblasen-Icon, unten links.
+ * Gleicher Glas-Stil wie Edge-Tab / Swap-Button.
+ */
+@Composable
+fun LanguageButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(52.dp)
+            .shadow(10.dp, CircleShape)
+            .clip(CircleShape)
+            .background(Tokens.GlassStrong)
+            .border(1.dp, Color(0xA6FFFFFF), CircleShape)
+            .scaleClick(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Ic(IcChat, tint = Tokens.AccentDeep, modifier = Modifier.size(25.dp))
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.transparency.fxlens.R
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.domain.PickerSlot
 import com.transparency.fxlens.ui.components.Flag
@@ -44,6 +47,7 @@ import com.transparency.fxlens.ui.components.Ic
 import com.transparency.fxlens.ui.components.IcCheck
 import com.transparency.fxlens.ui.components.IcPin
 import com.transparency.fxlens.ui.components.IcPinFilled
+import com.transparency.fxlens.ui.components.IcPlus
 import com.transparency.fxlens.ui.components.IcSearch
 import com.transparency.fxlens.ui.components.SheetScaffold
 import com.transparency.fxlens.ui.components.SheetTitle
@@ -68,8 +72,10 @@ fun PickerSheet(
     pinned: List<String>,
     onTogglePin: (String) -> Unit,
     onChoose: (String) -> Unit,
+    onAddCustom: () -> Unit,
     onClose: () -> Unit,
 ) {
+    val customCodes = remember(allCodes) { allCodes.filter { CurrencyMeta.isCustom(it) } }
     var q by remember { mutableStateOf("") }
     val active = if (slot == PickerSlot.FROM) from else to
     val query = q.trim().lowercase()
@@ -81,7 +87,7 @@ fun PickerSheet(
     val listMax = if (imeOpen) 232.dp else 372.dp
 
     SheetScaffold(onDismiss = onClose) {
-        SheetTitle(if (slot == PickerSlot.FROM) "Eingescannte Währung" else "Zielwährung")
+        SheetTitle(if (slot == PickerSlot.FROM) stringResource(R.string.picker_from) else stringResource(R.string.picker_to))
 
         // Suchfeld (.sheet-search): surface-warm, radius 14, padding 13/11, gap 9
         Row(
@@ -98,7 +104,7 @@ fun PickerSheet(
             Ic(IcSearch, tint = Tokens.Ink3, modifier = Modifier.size(18.dp))
             Box(Modifier.weight(1f)) {
                 if (q.isEmpty()) {
-                    Txt("Währung oder Code suchen", fontSize = 14.5.sp, color = Tokens.Ink3)
+                    Txt(stringResource(R.string.search_placeholder), fontSize = 14.5.sp, color = Tokens.Ink3)
                 }
                 BasicTextField(
                     value = q,
@@ -125,7 +131,7 @@ fun PickerSheet(
                 if (hits.isEmpty()) {
                     item(key = "empty") {
                         Txt(
-                            "Keine Treffer für „$q“",
+                            stringResource(R.string.no_hits, q),
                             fontSize = 13.sp,
                             color = Tokens.Ink2,
                             textAlign = TextAlign.Center,
@@ -140,15 +146,50 @@ fun PickerSheet(
                     }
                 }
             } else {
-                item(key = "label-pinned") { PickerSectionLabel("ANGEPINNT") }
-                items(pinned.filter { it in allCodes }, key = { it }) { code ->
+                // Eigene Kurse (§F2): eigene Sektion oben, aus den übrigen ausgeschlossen.
+                item(key = "label-custom") { PickerSectionLabel(stringResource(R.string.section_custom)) }
+                items(customCodes, key = { it }) { code ->
+                    CurRow(code, code == active, isPinned = code in pinned, full = full, onChoose = onChoose, onTogglePin = onTogglePin)
+                }
+                item(key = "add-custom") { AddCustomRow(count = customCodes.size, onClick = onAddCustom) }
+
+                item(key = "label-pinned") { PickerSectionLabel(stringResource(R.string.section_pinned)) }
+                items(pinned.filter { it in allCodes && it !in customCodes }, key = { it }) { code ->
                     CurRow(code, code == active, isPinned = true, full = full, onChoose = onChoose, onTogglePin = onTogglePin)
                 }
-                item(key = "divider") { PickerDivider("ALLE WÄHRUNGEN") }
-                items(allCodes.filter { it !in pinned }, key = { it }) { code ->
+                item(key = "divider") { PickerDivider(stringResource(R.string.section_all)) }
+                items(allCodes.filter { it !in pinned && it !in customCodes }, key = { it }) { code ->
                     CurRow(code, code == active, isPinned = false, full = full, onChoose = onChoose, onTogglePin = onTogglePin)
                 }
             }
+        }
+    }
+}
+
+/** „+ Eigener Kurs"-Zeile im Picker (§F2): öffnet das Custom-Kurs-Sheet. */
+@Composable
+private fun AddCustomRow(count: Int, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 4.dp)
+            .scaleClick(scale = 0.99f, onClick = onClick)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Tokens.AccentSoft)
+            .border(1.dp, Tokens.Accent.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(11.dp),
+    ) {
+        Box(
+            Modifier.size(32.dp).clip(CircleShape).background(Tokens.Accent),
+            contentAlignment = Alignment.Center,
+        ) {
+            Ic(IcPlus, tint = Color.White, modifier = Modifier.size(18.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Txt(stringResource(R.string.custom_rate_add), fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Tokens.Ink)
+            Txt(stringResource(R.string.custom_count, count), fontSize = 12.sp, color = Tokens.Ink2)
         }
     }
 }

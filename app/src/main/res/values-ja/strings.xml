@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScanConvert</string>
+
+    <!-- 共通アクション -->
+    <string name="action_save">保存</string>
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_delete">削除</string>
+    <string name="action_add">追加</string>
+    <string name="confirm_delete">本当に削除する？</string>
+
+    <!-- オンボーディング -->
+    <string name="onb_title">お気に入りを選ぼう</string>
+    <string name="onb_subtitle">よく使う通貨を最大4つまで、すぐ換算できるように。あとからいつでも変更できるよ。</string>
+    <string name="onb_selected">%1$d/4 選択中</string>
+    <string name="onb_min">1つ以上選んでね</string>
+    <string name="onb_go">はじめる</string>
+
+    <!-- グラスメニュー -->
+    <string name="menu_from">変換元</string>
+    <string name="menu_to">変換先</string>
+    <string name="status_live">ライブ</string>
+    <string name="status_offline">オフライン</string>
+
+    <!-- スキャンオーバーレイ / 結果 -->
+    <string name="scan_hint">数字を枠内に合わせてね</string>
+    <string name="scan_detected">認識完了</string>
+    <string name="scan_rescan">タップでもう一度スキャン</string>
+    <string name="res_converted">換算結果</string>
+    <string name="res_count">%1$d 件認識</string>
+    <string name="from_amount">%1$s %2$s から</string>
+    <string name="from_scanned">%1$s からスキャン</string>
+    <string name="add_to_list">リストに追加</string>
+
+    <!-- 「リストに追加」 -->
+    <string name="name_optional">名前（任意）</string>
+    <string name="name_item_placeholder">例：ホテル、夕食</string>
+    <string name="no_list_in">%1$s のリストはまだないよ。新しく作って、この通貨で価格をまとめよう。</string>
+    <string name="new_list_for">新しい %1$s リスト</string>
+    <string name="positions">%1$d 項目</string>
+
+    <!-- 新規リスト -->
+    <string name="create_title">新規リスト</string>
+    <string name="field_name">名前</string>
+    <string name="name_list_placeholder">例：香港旅行</string>
+    <string name="list_currency">リストの通貨</string>
+    <string name="fixed">固定</string>
+    <string name="budget_optional">予算（任意）</string>
+    <string name="create_and_add">作成して追加</string>
+    <string name="create_list">リストを作成</string>
+
+    <!-- リスト編集 -->
+    <string name="edit_list_title">リストを編集</string>
+    <string name="list_name_placeholder">リスト名</string>
+    <string name="delete_list">リストを削除</string>
+
+    <!-- 項目に名前を付ける -->
+    <string name="name_item_title">項目に名前を付ける</string>
+    <string name="delete_item">項目を削除</string>
+
+    <!-- カスタムレート -->
+    <string name="custom_title">カスタムレート</string>
+    <string name="custom_max">カスタムレートは最大5つまで。追加するには1つ削除してね。</string>
+    <string name="custom_name_placeholder">例：カジノチップ</string>
+    <string name="abbrev_optional">略称（任意）</string>
+    <string name="abbrev_placeholder">例：CHIP</string>
+    <string name="field_emoji">絵文字</string>
+    <string name="reference_currency">基準通貨</string>
+    <string name="field_rate">レート</string>
+    <string name="custom_rate_prefix">1 %1$s =</string>
+    <string name="custom_rate_formula">1 %1$s = %2$s %3$s</string>
+    <string name="custom_default_label">カスタム</string>
+
+    <!-- 通貨ピッカー -->
+    <string name="picker_from">スキャンした通貨</string>
+    <string name="picker_to">変換先の通貨</string>
+    <string name="search_placeholder">通貨名やコードで検索</string>
+    <string name="section_custom">カスタムレート</string>
+    <string name="custom_rate_add">カスタムレート</string>
+    <string name="custom_count">%1$d/5 作成済み</string>
+    <string name="section_pinned">ピン留め</string>
+    <string name="section_all">すべての通貨</string>
+    <string name="no_hits">「%1$s」に一致する結果なし</string>
+
+    <!-- リストパネル -->
+    <string name="lists_title">マイリスト</string>
+    <string name="lists_subtitle">変換先の通貨ごとの旅行費用</string>
+    <string name="no_lists">リストはまだないよ</string>
+    <string name="no_lists_hint">価格をスキャンして、変換先の通貨のリストにまとめよう。例えば旅行の予算管理に。</string>
+    <string name="positions_currency">%1$d 項目 · %2$s</string>
+    <string name="new_list">新規リスト</string>
+    <string name="total">合計</string>
+    <string name="positions_label">項目</string>
+    <string name="no_items_hint">まだ何も追加されていないよ。価格をスキャンして「リストに追加」をタップしてね。</string>
+
+    <!-- 予算バー -->
+    <string name="budget_prefix">予算 </string>
+    <string name="budget_left">残り %1$s</string>
+    <string name="budget_over">+%1$s 超過</string>
+
+    <!-- トースト -->
+    <string name="toast_added_to">「%1$s」に追加したよ</string>
+
+    <!-- 言語選択 -->
+    <string name="language_title">言語</string>
+    <string name="lang_de">ドイツ語</string>
+    <string name="lang_en">英語</string>
+    <string name="lang_es">スペイン語</string>
+    <string name="lang_fr">フランス語</string>
+    <string name="lang_pt">ポルトガル語</string>
+    <string name="lang_ar">アラビア語</string>
+    <string name="lang_ja">日本語</string>
+</resources>

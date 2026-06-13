@@ -42,6 +42,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.transparency.fxlens.R
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.domain.CreateMode
 import com.transparency.fxlens.domain.ListItem
@@ -83,7 +85,7 @@ fun AddToListSheet(
     val conv = convert(raw, from, to, rates)
     var label by remember { mutableStateOf("") }
     SheetScaffold(onDismiss = onClose) {
-        SheetTitle("Zu Liste hinzufügen")
+        SheetTitle(stringResource(R.string.add_to_list))
 
         // amount-chip
         Row(
@@ -107,7 +109,7 @@ fun AddToListSheet(
                     color = Tokens.Ink,
                 )
                 Txt(
-                    "aus ${fmt(raw, from)} gescannt",
+                    stringResource(R.string.from_scanned, fmt(raw, from)),
                     fontSize = 12.sp,
                     color = Tokens.Ink2,
                     modifier = Modifier.padding(top = 5.dp),
@@ -122,12 +124,12 @@ fun AddToListSheet(
             Modifier.padding(start = 2.dp, end = 2.dp, bottom = 14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FieldLabel("Name (optional)")
+            FieldLabel(stringResource(R.string.name_optional))
             Field {
                 FieldInput(
                     value = label,
                     onValueChange = { label = it },
-                    placeholder = "z. B. Hotel, Abendessen",
+                    placeholder = stringResource(R.string.name_item_placeholder),
                 )
             }
         }
@@ -143,7 +145,7 @@ fun AddToListSheet(
             lists.forEach { list ->
                 ListRow(list, onClick = { onAdd(list.id, label) })
             }
-            DashedNewRow(text = "Neue $to-Liste", onClick = { onNew(label) })
+            DashedNewRow(text = stringResource(R.string.new_list_for, to), onClick = { onNew(label) })
         }
     }
 }
@@ -173,7 +175,7 @@ private fun ListRow(list: TravelList, onClick: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Txt("${list.items.size} Positionen", fontSize = 12.sp, color = Tokens.Ink2)
+            Txt(stringResource(R.string.positions, list.items.size), fontSize = 12.sp, color = Tokens.Ink2)
         }
         Txt(
             fmt(list.total(), list.currency),
@@ -190,13 +192,8 @@ private fun ListRow(list: TravelList, onClick: () -> Unit) {
 /** .sheet-note — Hinweis bei leerer Listenauswahl, {to} fett in Ink. */
 @Composable
 private fun SheetNote(to: String) {
-    val text = buildAnnotatedString {
-        append("Noch keine Liste in ")
-        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Tokens.Ink)) { append(to) }
-        append(". Lege eine an, um Preise in dieser Währung zu sammeln.")
-    }
     BasicText(
-        text = text,
+        text = stringResource(R.string.no_list_in, to),
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 14.dp),
@@ -258,35 +255,35 @@ fun CreateListSheet(
     val suggested = remember(allCodes, pinned, recents) { suggestedOrder(allCodes, pinned, recents) }
 
     SheetScaffold(onDismiss = onClose) {
-        SheetTitle("Neue Liste")
+        SheetTitle(stringResource(R.string.create_title))
         Column(
             Modifier
                 .fillMaxWidth()
                 .padding(start = 2.dp, end = 2.dp, top = 4.dp, bottom = 2.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            FieldLabel("Name")
+            FieldLabel(stringResource(R.string.field_name))
             Field {
                 FieldInput(
                     value = name,
                     onValueChange = { name = it },
-                    placeholder = "z. B. Hongkong Reise",
+                    placeholder = stringResource(R.string.name_list_placeholder),
                     autoFocus = true,
                 )
             }
 
-            FieldLabel("Währung der Liste")
+            FieldLabel(stringResource(R.string.list_currency))
             if (mode == CreateMode.ADD) {
                 FixedCurrencyField(currency)
             } else {
                 CurScroller(allCodes = suggested, selected = cur, onSelect = { cur = it })
             }
 
-            FieldLabel("Budget (optional)")
+            FieldLabel(stringResource(R.string.budget_optional))
             BudgetField(value = budget, onValueChange = { budget = it }, currency = cur)
 
             PrimaryButton(
-                text = if (mode == CreateMode.ADD) "Erstellen & hinzufügen" else "Liste erstellen",
+                text = if (mode == CreateMode.ADD) stringResource(R.string.create_and_add) else stringResource(R.string.create_list),
                 enabled = name.trim().isNotEmpty(),
                 modifier = Modifier.padding(top = 6.dp),
                 onClick = { onCreate(name.trim(), cur, parseBudget(budget)) },
@@ -311,31 +308,31 @@ fun EditListSheet(
     var confirm by remember { mutableStateOf(false) }
 
     SheetScaffold(onDismiss = onClose) {
-        SheetTitle("Liste bearbeiten")
+        SheetTitle(stringResource(R.string.edit_list_title))
         Column(
             Modifier
                 .fillMaxWidth()
                 .padding(start = 2.dp, end = 2.dp, top = 4.dp, bottom = 2.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            FieldLabel("Name")
+            FieldLabel(stringResource(R.string.field_name))
             Field {
                 FieldInput(
                     value = name,
                     onValueChange = { name = it },
-                    placeholder = "Listenname",
+                    placeholder = stringResource(R.string.list_name_placeholder),
                     autoFocus = true,
                 )
             }
 
-            FieldLabel("Währung der Liste")
+            FieldLabel(stringResource(R.string.list_currency))
             FixedCurrencyField(list.currency)
 
-            FieldLabel("Budget (optional)")
+            FieldLabel(stringResource(R.string.budget_optional))
             BudgetField(value = budget, onValueChange = { budget = it }, currency = list.currency)
 
             PrimaryButton(
-                text = "Speichern",
+                text = stringResource(R.string.action_save),
                 enabled = name.trim().isNotEmpty(),
                 modifier = Modifier.padding(top = 6.dp),
                 onClick = { onSave(name.trim(), parseBudget(budget)) },
@@ -351,7 +348,7 @@ fun EditListSheet(
                         .padding(12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Txt("Liste löschen", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Tokens.Danger)
+                    Txt(stringResource(R.string.delete_list), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Tokens.Danger)
                 }
             } else {
                 // .confirm-row — Inline-Bestätigung
@@ -362,10 +359,10 @@ fun EditListSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Txt("Wirklich löschen?", fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = Tokens.Ink)
+                    Txt(stringResource(R.string.confirm_delete), fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = Tokens.Ink)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ConfirmActionBtn("Abbrechen", bg = Tokens.SurfaceWarm, fg = Tokens.Ink2) { confirm = false }
-                        ConfirmActionBtn("Löschen", bg = Tokens.Danger, fg = Color.White, onClick = onDelete)
+                        ConfirmActionBtn(stringResource(R.string.action_cancel), bg = Tokens.SurfaceWarm, fg = Tokens.Ink2) { confirm = false }
+                        ConfirmActionBtn(stringResource(R.string.action_delete), bg = Tokens.Danger, fg = Color.White, onClick = onDelete)
                     }
                 }
             }
@@ -389,7 +386,7 @@ fun EditItemSheet(
     var confirm by remember { mutableStateOf(false) }
 
     SheetScaffold(onDismiss = onClose) {
-        SheetTitle("Position benennen")
+        SheetTitle(stringResource(R.string.name_item_title))
 
         // amount-chip (read-only): umgerechneter Betrag + Herkunft
         Row(
@@ -413,7 +410,7 @@ fun EditItemSheet(
                     color = Tokens.Ink,
                 )
                 Txt(
-                    "aus ${fmt(item.raw, item.from)} gescannt",
+                    stringResource(R.string.from_scanned, fmt(item.raw, item.from)),
                     fontSize = 12.sp,
                     color = Tokens.Ink2,
                     modifier = Modifier.padding(top = 5.dp),
@@ -429,18 +426,18 @@ fun EditItemSheet(
                 .padding(start = 2.dp, end = 2.dp, bottom = 2.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            FieldLabel("Name (optional)")
+            FieldLabel(stringResource(R.string.name_optional))
             Field {
                 FieldInput(
                     value = label,
                     onValueChange = { label = it },
-                    placeholder = "z. B. Hotel, Abendessen",
+                    placeholder = stringResource(R.string.name_item_placeholder),
                     autoFocus = true,
                 )
             }
 
             PrimaryButton(
-                text = "Speichern",
+                text = stringResource(R.string.action_save),
                 modifier = Modifier.padding(top = 6.dp),
                 onClick = { onSave(label) },
             )
@@ -454,7 +451,7 @@ fun EditItemSheet(
                         .padding(12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Txt("Position löschen", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Tokens.Danger)
+                    Txt(stringResource(R.string.delete_item), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Tokens.Danger)
                 }
             } else {
                 Row(
@@ -464,10 +461,10 @@ fun EditItemSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Txt("Wirklich löschen?", fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = Tokens.Ink)
+                    Txt(stringResource(R.string.confirm_delete), fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = Tokens.Ink)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ConfirmActionBtn("Abbrechen", bg = Tokens.SurfaceWarm, fg = Tokens.Ink2) { confirm = false }
-                        ConfirmActionBtn("Löschen", bg = Tokens.Danger, fg = Color.White, onClick = onDelete)
+                        ConfirmActionBtn(stringResource(R.string.action_cancel), bg = Tokens.SurfaceWarm, fg = Tokens.Ink2) { confirm = false }
+                        ConfirmActionBtn(stringResource(R.string.action_delete), bg = Tokens.Danger, fg = Color.White, onClick = onDelete)
                     }
                 }
             }
@@ -502,7 +499,7 @@ private fun FixedCurrencyField(code: String) {
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.weight(1f))
-        Txt("fest", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Tokens.Ink3)
+        Txt(stringResource(R.string.fixed), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Tokens.Ink3)
     }
 }
 

@@ -5,29 +5,39 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.transparency.fxlens.MainViewModel
+import com.transparency.fxlens.data.LocaleStore
 import com.transparency.fxlens.domain.CreateMode
 import com.transparency.fxlens.domain.ScanPhase
 import com.transparency.fxlens.scan.CameraScanPreview
 import com.transparency.fxlens.ui.components.AppToast
 import com.transparency.fxlens.ui.screens.AddToListSheet
 import com.transparency.fxlens.ui.screens.CreateListSheet
+import com.transparency.fxlens.ui.screens.CustomRateSheet
 import com.transparency.fxlens.ui.screens.EdgeTab
 import com.transparency.fxlens.ui.screens.EditItemSheet
 import com.transparency.fxlens.ui.screens.EditListSheet
 import com.transparency.fxlens.ui.screens.GlassMenu
+import com.transparency.fxlens.ui.screens.LanguageButton
+import com.transparency.fxlens.ui.screens.LanguageSheet
 import com.transparency.fxlens.ui.screens.ListsPanel
 import com.transparency.fxlens.ui.screens.OnboardingScreen
 import com.transparency.fxlens.ui.screens.PickerSheet
@@ -41,15 +51,17 @@ import com.transparency.fxlens.ui.theme.FxTheme
  * Onboarding (z70) → Toast (z80).
  */
 @Composable
-fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
+fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (String) -> Unit = {}) {
     val rates by vm.rates.collectAsState()
     val lists by vm.lists.collectAsState()
     val pins by vm.pins.collectAsState()
     val recents by vm.recents.collectAsState()
+    val customs by vm.customs.collectAsState()
     val allCodes by vm.allCodes.collectAsState()
     val onboarded by vm.onboarded.collectAsState()
 
-    val overlayOpen = vm.picker != null || vm.addOpen || vm.creating != null || vm.panelOpen
+    var langOpen by remember { mutableStateOf(false) }
+    val overlayOpen = vm.picker != null || vm.addOpen || vm.creating != null || vm.panelOpen || vm.customOpen || langOpen
 
     // Status-Bar-Icons: hell über Kamera, dunkel über hellen Vollbild-Schichten.
     val view = LocalView.current
@@ -109,6 +121,17 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
                     .offset(y = 300.dp),
             )
 
+            // Sprach-Button unten links (§F4) — im ruhigen Scan-Zustand sichtbar.
+            if (onboarded == true && !overlayOpen && vm.scanPhase is ScanPhase.Scanning) {
+                LanguageButton(
+                    onClick = { langOpen = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .navigationBarsPadding()
+                        .padding(start = 18.dp, bottom = 22.dp),
+                )
+            }
+
             // Währungs-Picker (Screen 3)
             vm.picker?.let { slot ->
                 PickerSheet(
@@ -119,7 +142,19 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
                     pinned = pins,
                     onTogglePin = vm::togglePin,
                     onChoose = vm::choose,
+                    onAddCustom = vm::openCustom,
                     onClose = vm::closePicker,
+                )
+            }
+
+            // „Eigener Kurs" (über dem Picker, §F2)
+            if (vm.customOpen) {
+                CustomRateSheet(
+                    customs = customs,
+                    allCodes = allCodes,
+                    onCreate = vm::addCustom,
+                    onDelete = vm::deleteCustom,
+                    onClose = vm::closeCustom,
                 )
             }
 
@@ -193,6 +228,19 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
                         onClose = vm::cancelEdit,
                     )
                 }
+            }
+
+            // Sprachauswahl (§F5, über Panel/Sheets)
+            if (langOpen) {
+                val ctx = LocalContext.current
+                LanguageSheet(
+                    current = LocaleStore.effective(ctx),
+                    onSelect = { lang ->
+                        langOpen = false
+                        onSetLanguage(lang)
+                    },
+                    onClose = { langOpen = false },
+                )
             }
 
             // Onboarding (z70, nur vor erstem Abschluss)

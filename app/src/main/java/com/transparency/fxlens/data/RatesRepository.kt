@@ -57,7 +57,11 @@ class RatesRepository(context: Context) {
         return FxRates(DEMO_RATES, 0L, live = false)
     }
 
-    /** Holt frische Kurse; bei Fehler bleibt der letzte Stand erhalten. */
+    /**
+     * Holt frische Kurse; bei Erfolg live=true mit neuem Zeitstempel. Bei Fehler
+     * (offline) bleibt der letzte Stand erhalten, wird aber als nicht-live markiert,
+     * damit die UI Datum/Uhrzeit des letzten Stands statt „LIVE" zeigt (§1/§3).
+     */
     suspend fun refresh(): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             val conn = URL("https://open.er-api.com/v6/latest/EUR").openConnection() as HttpURLConnection
@@ -75,7 +79,15 @@ class RatesRepository(context: Context) {
             _rates.value = FxRates(rates, updatedAt, live = true)
             persist(rates, updatedAt)
             true
-        }.getOrDefault(false)
+        }.getOrElse {
+            markOffline()
+            false
+        }
+    }
+
+    /** Verbindung verloren: letzten Kurs behalten, aber nicht mehr als „live" zeigen. */
+    fun markOffline() {
+        if (_rates.value.live) _rates.value = _rates.value.copy(live = false)
     }
 
     private fun persist(rates: Map<String, Double>, updatedAt: Long) {

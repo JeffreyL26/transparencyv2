@@ -1,13 +1,19 @@
 package com.transparency.fxlens
 
 import android.app.Application
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.transparency.fxlens.data.CurrencyMeta
+import com.transparency.fxlens.data.CustomCurrency
 import com.transparency.fxlens.data.FxRates
+import com.transparency.fxlens.data.LocaleStore
 import com.transparency.fxlens.domain.CreateMode
 import com.transparency.fxlens.domain.ListItem
 import com.transparency.fxlens.domain.PickerSlot
@@ -19,6 +25,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -40,10 +47,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ratesRepo = container.ratesRepository
 
     // ---------- persistenter State ----------
-    val rates: StateFlow<FxRates> = ratesRepo.rates
+    /** Vom Nutzer angelegte Custom-Währungen (§F2). */
+    val customs: StateFlow<List<CustomCurrency>> = prefs.customs
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    /** Alle Codes der Live-API (alphabetisch, ohne ausgeblendete) — Onboarding, Picker, Listen (§8). */
-    val allCodes: StateFlow<List<String>> = ratesRepo.rates
+    /**
+     * Live-Kurse inkl. Custom-Währungen. Jede Custom-Währung wird an ihre
+     * Referenzwährung gekoppelt (Kurs = rate[ref] · perRef) und folgt damit
+     * deren Live-Kurs. Nebenbei wird die CurrencyMeta-Registry aktualisiert.
+     */
+    val rates: StateFlow<FxRates> = combine(ratesRepo.rates, prefs.customs) { fx, cs ->
+        CurrencyMeta.setCustoms(cs)
+        mergeCustoms(fx, cs)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ratesRepo.rates.value)
+
+    /** Alle Codes (alphabetisch, ohne ausgeblendete) inkl. Custom — Picker, Listen (§8). */
+    val allCodes: StateFlow<List<String>> = rates
         .map { visibleCodes(it.rates.keys) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, visibleCodes(ratesRepo.rates.value.rates.keys))
 
@@ -83,6 +102,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var editingItem by mutableStateOf<EditItemTarget?>(null)
         private set
+    /** „Custom-Kurs anlegen"-Sheet offen (über dem Picker, §F2). */
+    var customOpen by mutableStateOf(false)
+        private set
 
     /** Akkumulierter Drehwinkel des Swap-Buttons (+180° je Tap, §11). */
     var swapAngle by mutableStateOf(0f)
@@ -93,6 +115,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var toastVisible by mutableStateOf(false)
         private set
     private var toastJob: Job? = null
+
+    // Connectivity-Überwachung (vor init deklariert, da init sie registriert).
+    private val connectivityManager =
+        app.getSystemService(ConnectivityManager::class.java)
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            viewModelScope.launch { ratesRepo.refresh() }
+        }
+        override fun onLost(network: Network) {
+            ratesRepo.markOffline()
+        }
+        // „Verbunden, aber kein Internet" (z. B. Captive Portal): sofort als offline
+        // markieren bzw. bei Validierung aktualisieren — ohne den 15-min-Poll abzuwarten.
+        override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+            if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+                if (!ratesRepo.rates.value.live) viewModelScope.launch { ratesRepo.refresh() }
+            } else {
+                ratesRepo.markOffline()
+            }
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -109,6 +153,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 delay(15 * 60 * 1000L)
             }
         }
+        // Sofort auf Verbindungswechsel reagieren: online → Kurs aktualisieren (§3),
+        // offline → letzten Stand mit Datum/Uhrzeit zeigen statt „LIVE" (§1).
+        runCatching { connectivityManager?.registerDefaultNetworkCallback(networkCallback) }
+    }
+
+    override fun onCleared() {
+        runCatching { connectivityManager?.unregisterNetworkCallback(networkCallback) }
+        super.onCleared()
     }
 
     // ---------- Onboarding ----------
@@ -125,6 +177,47 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val next = if (code in p) p - code else if (p.size >= 4) p else p + code
             prefs.setPins(next)
         }
+    }
+
+    // ---------- Custom-Währungen (§F2) ----------
+    fun openCustom() { customOpen = true }
+    fun closeCustom() { customOpen = false }
+
+    /** Legt eine Custom-Währung an (max. 5) und schließt das Sheet. */
+    fun addCustom(name: String, abbrev: String?, emoji: String, refCode: String, perRef: Double) {
+        viewModelScope.launch {
+            val cur = customs.value
+            if (cur.size >= 5 || perRef <= 0.0 || name.isBlank() || emoji.isBlank()) return@launch
+            val code = makeCustomCode(abbrev, cur)
+            prefs.setCustoms(cur + CustomCurrency(code, name.trim(), emoji.trim(), refCode, perRef))
+            customOpen = false
+        }
+    }
+
+    fun deleteCustom(code: String) {
+        viewModelScope.launch { prefs.setCustoms(customs.value.filterNot { it.code == code }) }
+    }
+
+    /** Eindeutiger Code: bereinigte Abkürzung, sonst „C1"…; kollidiert nie mit echten Codes. */
+    private fun makeCustomCode(abbrev: String?, existing: List<CustomCurrency>): String {
+        val taken = existing.map { it.code }.toSet() + rates.value.rates.keys
+        val a = abbrev?.trim()?.uppercase()?.filter { it.isLetterOrDigit() }?.take(6)
+        if (!a.isNullOrBlank() && a !in taken) return a
+        for (i in 1..99) {
+            val g = "C$i"
+            if (g !in taken) return g
+        }
+        return "C" + UUID.randomUUID().toString().take(4).uppercase()
+    }
+
+    private fun mergeCustoms(fx: FxRates, cs: List<CustomCurrency>): FxRates {
+        if (cs.isEmpty()) return fx
+        val merged = fx.rates.toMutableMap()
+        for (c in cs) {
+            val ref = fx.rates[c.refCode]
+            if (ref != null && c.perRef > 0.0) merged[c.code] = ref * c.perRef
+        }
+        return fx.copy(rates = merged)
     }
 
     // ---------- Währungswahl ----------
@@ -281,7 +374,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             listsRepo.addItem(listId, item)
             addOpen = false
-            showToast("Zu „${list.name}“ hinzugefügt")
+            showToast(str(R.string.toast_added_to, list.name))
         }
     }
 
@@ -300,7 +393,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 listsRepo.createList(name, currency, budget, first)
-                showToast("Zu „$name“ hinzugefügt")
+                showToast(str(R.string.toast_added_to, name))
             } else {
                 val id = listsRepo.createList(name, currency, budget)
                 selectedListId = id
@@ -344,6 +437,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---------- Toast (Screen 8) ----------
+    /** Lokalisierter String über einen Context mit der gewählten App-Sprache (§F5). */
+    private fun str(resId: Int, vararg args: Any): String =
+        LocaleStore.wrap(getApplication<Application>()).getString(resId, *args)
+
     private fun showToast(msg: String) {
         toastJob?.cancel()
         toastMsg = msg

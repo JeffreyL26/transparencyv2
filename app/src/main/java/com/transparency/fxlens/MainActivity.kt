@@ -1,6 +1,7 @@
 package com.transparency.fxlens
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,11 +17,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import com.transparency.fxlens.data.LocaleStore
 import com.transparency.fxlens.ui.AppRoot
 
 class MainActivity : ComponentActivity() {
 
     private val vm: MainViewModel by viewModels()
+
+    /** Wendet die gewählte App-Sprache an, bevor Ressourcen geladen werden (§F5). */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleStore.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +51,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            AppRoot(vm = vm, hasCameraPermission = hasCamera)
+            AppRoot(
+                vm = vm,
+                hasCameraPermission = hasCamera,
+                onSetLanguage = { lang ->
+                    LocaleStore.setLang(this@MainActivity, lang)
+                    recreate()
+                },
+            )
         }
     }
 }

@@ -1,4 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ScanConvert</string>
+
+    <!-- gemeinsame Aktionen -->
+    <string name="action_save">Speichern</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_add">Hinzufügen</string>
+    <string name="confirm_delete">Wirklich löschen?</string>
+
+    <!-- Onboarding -->
+    <string name="onb_title">Wähle deine Favoriten</string>
+    <string name="onb_subtitle">Bis zu 4 Währungen für den Schnellzugriff beim Umrechnen. Du kannst das später jederzeit ändern.</string>
+    <string name="onb_selected">%1$d/4 ausgewählt</string>
+    <string name="onb_min">Mindestens 1 wählen</string>
+    <string name="onb_go">Los geht\'s</string>
+
+    <!-- Glas-Menü -->
+    <string name="menu_from">VON</string>
+    <string name="menu_to">ZU</string>
+    <string name="status_live">LIVE</string>
+    <string name="status_offline">OFFLINE</string>
+
+    <!-- Scan-Overlay / Ergebnis -->
+    <string name="scan_hint">Zahl in den Rahmen halten</string>
+    <string name="scan_detected">Erkannt</string>
+    <string name="scan_rescan">Tippen, um neu zu scannen</string>
+    <string name="res_converted">UMGERECHNET</string>
+    <string name="res_count">%1$d ERKANNT</string>
+    <string name="from_amount">aus %1$s %2$s</string>
+    <string name="from_scanned">aus %1$s gescannt</string>
+    <string name="add_to_list">Zu Liste hinzufügen</string>
+
+    <!-- „Zu Liste hinzufügen" -->
+    <string name="name_optional">Name (optional)</string>
+    <string name="name_item_placeholder">z. B. Hotel, Abendessen</string>
+    <string name="no_list_in">Noch keine Liste in %1$s. Lege eine an, um Preise in dieser Währung zu sammeln.</string>
+    <string name="new_list_for">Neue %1$s-Liste</string>
+    <string name="positions">%1$d Positionen</string>
+
+    <!-- Neue Liste -->
+    <string name="create_title">Neue Liste</string>
+    <string name="field_name">Name</string>
+    <string name="name_list_placeholder">z. B. Hongkong Reise</string>
+    <string name="list_currency">Währung der Liste</string>
+    <string name="fixed">fest</string>
+    <string name="budget_optional">Budget (optional)</string>
+    <string name="create_and_add">Erstellen &amp; hinzufügen</string>
+    <string name="create_list">Liste erstellen</string>
+
+    <!-- Liste bearbeiten -->
+    <string name="edit_list_title">Liste bearbeiten</string>
+    <string name="list_name_placeholder">Listenname</string>
+    <string name="delete_list">Liste löschen</string>
+
+    <!-- Position benennen -->
+    <string name="name_item_title">Position benennen</string>
+    <string name="delete_item">Position löschen</string>
+
+    <!-- Eigene Kurse (Custom) -->
+    <string name="custom_title">Eigene Kurse</string>
+    <string name="custom_max">Maximal 5 eigene Kurse erreicht. Lösche einen, um Platz zu schaffen.</string>
+    <string name="custom_name_placeholder">z. B. Casino-Chip</string>
+    <string name="abbrev_optional">Abkürzung (optional)</string>
+    <string name="abbrev_placeholder">z. B. CHIP</string>
+    <string name="field_emoji">Emoji</string>
+    <string name="reference_currency">Referenzwährung</string>
+    <string name="field_rate">Kurs</string>
+    <string name="custom_rate_prefix">1 %1$s =</string>
+    <string name="custom_rate_formula">1 %1$s = %2$s %3$s</string>
+    <string name="custom_default_label">Custom</string>
+
+    <!-- Währungs-Picker -->
+    <string name="picker_from">Eingescannte Währung</string>
+    <string name="picker_to">Zielwährung</string>
+    <string name="search_placeholder">Währung oder Code suchen</string>
+    <string name="section_custom">EIGENE KURSE</string>
+    <string name="custom_rate_add">Eigener Kurs</string>
+    <string name="custom_count">%1$d/5 angelegt</string>
+    <string name="section_pinned">ANGEPINNT</string>
+    <string name="section_all">ALLE WÄHRUNGEN</string>
+    <string name="no_hits">Keine Treffer für „%1$s"</string>
+
+    <!-- Listen-Panel -->
+    <string name="lists_title">Meine Listen</string>
+    <string name="lists_subtitle">Reise-Rechnungen je Zielwährung</string>
+    <string name="no_lists">Noch keine Listen</string>
+    <string name="no_lists_hint">Scanne Preise und sammle sie in einer Liste deiner Zielwährung — z. B. dein Reisebudget.</string>
+    <string name="positions_currency">%1$d Positionen · %2$s</string>
+    <string name="new_list">Neue Liste</string>
+    <string name="total">GESAMT</string>
+    <string name="positions_label">POSITIONEN</string>
+    <string name="no_items_hint">Noch nichts hinzugefügt. Scanne einen Preis und tippe „Zu Liste hinzufügen".</string>
+
+    <!-- Budget-Balken -->
+    <string name="budget_prefix">Budget </string>
+    <string name="budget_left">%1$s übrig</string>
+    <string name="budget_over">+%1$s über</string>
+
+    <!-- Toast -->
+    <string name="toast_added_to">Zu „%1$s" hinzugefügt</string>
+
+    <!-- Sprachauswahl -->
+    <string name="language_title">Sprache</string>
+    <string name="lang_de">Deutsch</string>
+    <string name="lang_en">Englisch</string>
+    <string name="lang_es">Spanisch</string>
+    <string name="lang_fr">Französisch</string>
+    <string name="lang_pt">Portugiesisch</string>
+    <string name="lang_ar">Arabisch</string>
+    <string name="lang_ja">Japanisch</string>
 </resources>

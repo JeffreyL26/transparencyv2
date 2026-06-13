@@ -35,11 +35,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.transparency.fxlens.R
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.ui.components.Flag
 import com.transparency.fxlens.ui.components.Ic
@@ -108,14 +110,14 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
         }
 
         Txt(
-            "Wähle deine Favoriten",
+            stringResource(R.string.onb_title),
             fontSize = 25.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = (-0.02).em,
             lineHeight = 28.75.sp,
         )
         Txt(
-            "Bis zu 4 Währungen für den Schnellzugriff beim Umrechnen. Du kannst das später jederzeit ändern.",
+            stringResource(R.string.onb_subtitle),
             fontSize = 14.sp,
             color = Tokens.Ink2,
             lineHeight = 21.sp,
@@ -137,7 +139,7 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
                 }
             }
             Txt(
-                "${selection.size}/4 ausgewählt",
+                stringResource(R.string.onb_selected, selection.size),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Tokens.AccentDeep,
@@ -166,7 +168,7 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
         }
 
         PrimaryButton(
-            text = if (selection.isEmpty()) "Mindestens 1 wählen" else "Los geht’s",
+            text = if (selection.isEmpty()) stringResource(R.string.onb_min) else stringResource(R.string.onb_go),
             enabled = selection.isNotEmpty(),
             modifier = Modifier.padding(top = 6.dp),
             onClick = { onDone(selection) },

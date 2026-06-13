@@ -37,10 +37,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.transparency.fxlens.R
 import com.transparency.fxlens.domain.fmt
 import com.transparency.fxlens.ui.theme.Grotesk
 import com.transparency.fxlens.ui.theme.LocalMotionScale
@@ -164,7 +166,7 @@ fun BudgetBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Txt("Budget ", fontSize = 12.sp, color = Tokens.Ink2)
+                    Txt(stringResource(R.string.budget_prefix), fontSize = 12.sp, color = Tokens.Ink2)
                     Txt(
                         fmt(budget, currency),
                         fontSize = 12.sp,
@@ -174,7 +176,7 @@ fun BudgetBar(
                     )
                 }
                 Txt(
-                    text = if (over) "+" + fmt(-rem, currency) + " über" else fmt(rem, currency) + " übrig",
+                    text = if (over) stringResource(R.string.budget_over, fmt(-rem, currency)) else stringResource(R.string.budget_left, fmt(rem, currency)),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (over) Tokens.Danger else Tokens.AccentDeep,

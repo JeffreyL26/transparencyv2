@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScanConvert</string>
+
+    <!-- acciones comunes -->
+    <string name="action_save">Guardar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_add">Añadir</string>
+    <string name="confirm_delete">¿Seguro que quieres eliminarlo?</string>
+
+    <!-- Onboarding -->
+    <string name="onb_title">Elige tus favoritas</string>
+    <string name="onb_subtitle">Hasta 4 monedas para el acceso rápido al convertir. Puedes cambiarlo cuando quieras.</string>
+    <string name="onb_selected">%1$d/4 seleccionadas</string>
+    <string name="onb_min">Elige al menos 1</string>
+    <string name="onb_go">¡Vamos!</string>
+
+    <!-- Menú de vidrio -->
+    <string name="menu_from">DE</string>
+    <string name="menu_to">A</string>
+    <string name="status_live">EN VIVO</string>
+    <string name="status_offline">SIN CONEXIÓN</string>
+
+    <!-- Superposición de escaneo / Resultado -->
+    <string name="scan_hint">Coloca el número dentro del marco</string>
+    <string name="scan_detected">Detectado</string>
+    <string name="scan_rescan">Toca para escanear de nuevo</string>
+    <string name="res_converted">CONVERTIDO</string>
+    <string name="res_count">%1$d DETECTADOS</string>
+    <string name="from_amount">de %1$s %2$s</string>
+    <string name="from_scanned">escaneado de %1$s</string>
+    <string name="add_to_list">Añadir a la lista</string>
+
+    <!-- „Añadir a la lista" -->
+    <string name="name_optional">Nombre (opcional)</string>
+    <string name="name_item_placeholder">p. ej. Hotel, Cena</string>
+    <string name="no_list_in">Aún no hay ninguna lista en %1$s. Crea una para reunir precios en esta moneda.</string>
+    <string name="new_list_for">Nueva lista de %1$s</string>
+    <string name="positions">%1$d posiciones</string>
+
+    <!-- Nueva lista -->
+    <string name="create_title">Nueva lista</string>
+    <string name="field_name">Nombre</string>
+    <string name="name_list_placeholder">p. ej. Viaje a Hong Kong</string>
+    <string name="list_currency">Moneda de la lista</string>
+    <string name="fixed">fija</string>
+    <string name="budget_optional">Presupuesto (opcional)</string>
+    <string name="create_and_add">Crear y añadir</string>
+    <string name="create_list">Crear lista</string>
+
+    <!-- Editar lista -->
+    <string name="edit_list_title">Editar lista</string>
+    <string name="list_name_placeholder">Nombre de la lista</string>
+    <string name="delete_list">Eliminar lista</string>
+
+    <!-- Nombrar posición -->
+    <string name="name_item_title">Nombrar posición</string>
+    <string name="delete_item">Eliminar posición</string>
+
+    <!-- Tasas propias (Custom) -->
+    <string name="custom_title">Tasas propias</string>
+    <string name="custom_max">Has alcanzado el máximo de 5 tasas propias. Elimina una para hacer espacio.</string>
+    <string name="custom_name_placeholder">p. ej. Ficha de casino</string>
+    <string name="abbrev_optional">Abreviatura (opcional)</string>
+    <string name="abbrev_placeholder">p. ej. FICHA</string>
+    <string name="field_emoji">Emoji</string>
+    <string name="reference_currency">Moneda de referencia</string>
+    <string name="field_rate">Tasa</string>
+    <string name="custom_rate_prefix">1 %1$s =</string>
+    <string name="custom_rate_formula">1 %1$s = %2$s %3$s</string>
+    <string name="custom_default_label">Propia</string>
+
+    <!-- Selector de moneda -->
+    <string name="picker_from">Moneda escaneada</string>
+    <string name="picker_to">Moneda de destino</string>
+    <string name="search_placeholder">Busca una moneda o código</string>
+    <string name="section_custom">TASAS PROPIAS</string>
+    <string name="custom_rate_add">Tasa propia</string>
+    <string name="custom_count">%1$d/5 creadas</string>
+    <string name="section_pinned">FIJADAS</string>
+    <string name="section_all">TODAS LAS MONEDAS</string>
+    <string name="no_hits">Sin resultados para „%1$s"</string>
+
+    <!-- Panel de listas -->
+    <string name="lists_title">Mis listas</string>
+    <string name="lists_subtitle">Cuentas de viaje por moneda de destino</string>
+    <string name="no_lists">Aún no hay listas</string>
+    <string name="no_lists_hint">Escanea precios y reúnelos en una lista de tu moneda de destino, p. ej. tu presupuesto de viaje.</string>
+    <string name="positions_currency">%1$d posiciones · %2$s</string>
+    <string name="new_list">Nueva lista</string>
+    <string name="total">TOTAL</string>
+    <string name="positions_label">POSICIONES</string>
+    <string name="no_items_hint">Aún no has añadido nada. Escanea un precio y toca „Añadir a la lista".</string>
+
+    <!-- Barra de presupuesto -->
+    <string name="budget_prefix">Presupuesto </string>
+    <string name="budget_left">%1$s restante</string>
+    <string name="budget_over">+%1$s de más</string>
+
+    <!-- Toast -->
+    <string name="toast_added_to">Añadido a „%1$s"</string>
+
+    <!-- Selección de idioma -->
+    <string name="language_title">Idioma</string>
+    <string name="lang_de">Alemán</string>
+    <string name="lang_en">Inglés</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_fr">Francés</string>
+    <string name="lang_pt">Portugués</string>
+    <string name="lang_ar">Árabe</string>
+    <string name="lang_ja">Japonés</string>
+</resources>

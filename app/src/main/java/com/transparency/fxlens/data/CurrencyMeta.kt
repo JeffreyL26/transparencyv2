@@ -120,7 +120,25 @@ object CurrencyMeta {
 
     private val cache = ConcurrentHashMap<String, CurrencyInfo>()
 
-    fun info(code: String): CurrencyInfo = cache.getOrPut(code) {
+    /** Laufzeit-Registry der Custom-Währungen (§F2); wird vom ViewModel aktualisiert. */
+    private val customRegistry = ConcurrentHashMap<String, CustomCurrency>()
+
+    fun setCustoms(list: List<CustomCurrency>) {
+        customRegistry.clear()
+        list.forEach { customRegistry[it.code] = it }
+    }
+
+    fun isCustom(code: String): Boolean = customRegistry.containsKey(code)
+
+    /** Emoji einer Custom-Währung (statt Flagge), sonst null. */
+    fun emoji(code: String): String? = customRegistry[code]?.emoji
+
+    fun info(code: String): CurrencyInfo {
+        customRegistry[code]?.let { return CurrencyInfo(code, it.name, it.code, null) }
+        return cache.getOrPut(code) { buildInfo(code) }
+    }
+
+    private fun buildInfo(code: String): CurrencyInfo {
         val icu = runCatching { Currency.getInstance(code) }.getOrNull()
         val name = nameOverrides[code]
             ?: icu?.getDisplayName(Locale.GERMAN)?.takeIf { !it.equals(code, ignoreCase = true) }
@@ -130,7 +148,7 @@ object CurrencyMeta {
             ?: code
         val cc = ccOverrides[code]
             ?: if (code in noFlag || code.length < 2) null else code.take(2).lowercase(Locale.ROOT)
-        CurrencyInfo(code, name, sym, cc)
+        return CurrencyInfo(code, name, sym, cc)
     }
 
     private val displaySymCache = ConcurrentHashMap<String, String>()
@@ -140,7 +158,7 @@ object CurrencyMeta {
      * (CHF → "CHF", USD → "$"); die Tabellen-Symbole aus §6 (`sym`) bleiben den
      * Chips/Picker-Zeilen/Suffixen vorbehalten. Nicht-ISO-Codes fallen auf `sym` zurück.
      */
-    fun displaySym(code: String): String = displaySymCache.getOrPut(code) {
+    fun displaySym(code: String): String = customRegistry[code]?.code ?: displaySymCache.getOrPut(code) {
         runCatching { Currency.getInstance(code).getSymbol(Locale.GERMANY) }
             .getOrNull()
             ?.takeIf { it.isNotBlank() }

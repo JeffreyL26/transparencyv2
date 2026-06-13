@@ -41,10 +41,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.transparency.fxlens.R
 import com.transparency.fxlens.domain.ScanPhase
 import com.transparency.fxlens.domain.convert
 import com.transparency.fxlens.domain.fmtNum
@@ -114,7 +116,7 @@ fun ScanLayer(
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
             ) {
                 LiveDot(8.dp, color = Color.White)
-                Txt("Zahl in den Rahmen halten", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                Txt(stringResource(R.string.scan_hint), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
         }
 
@@ -263,7 +265,7 @@ private fun ScanBox(locked: Boolean, onRescan: () -> Unit, modifier: Modifier = 
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 Ic(IcCheck, tint = Color.White, modifier = Modifier.size(16.dp))
-                Txt("Erkannt", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Txt(stringResource(R.string.scan_detected), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
 
@@ -285,7 +287,7 @@ private fun ScanBox(locked: Boolean, onRescan: () -> Unit, modifier: Modifier = 
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Txt(
-                    "Tippen, um neu zu scannen",
+                    stringResource(R.string.scan_rescan),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White,
@@ -336,7 +338,7 @@ private fun ResultCard(
         ) {
             LiveDot(7.dp)
             Txt(
-                if (multi) "${raws.size} ERKANNT" else "UMGERECHNET",
+                if (multi) stringResource(R.string.res_count, raws.size) else stringResource(R.string.res_converted),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.1.em,
@@ -451,7 +453,7 @@ private fun AddBar(onClick: () -> Unit) {
         Ic(IcPlus, tint = Color.White, modifier = Modifier.size(19.dp))
         Spacer(Modifier.size(9.dp))
         Txt(
-            "Zu Liste hinzufügen",
+            stringResource(R.string.add_to_list),
             fontSize = 14.5.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = (-0.01).em,
@@ -498,7 +500,7 @@ private fun StackedRow(
                 )
             }
             Txt(
-                "aus ${fmtNum(raw, from)} $from",
+                stringResource(R.string.from_amount, fmtNum(raw, from), from),
                 fontSize = 12.sp,
                 color = Tokens.Ink2,
                 modifier = Modifier.padding(top = 2.dp),

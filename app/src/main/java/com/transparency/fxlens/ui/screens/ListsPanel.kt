@@ -37,12 +37,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.transparency.fxlens.R
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.domain.ListItem
 import com.transparency.fxlens.domain.TravelList
@@ -157,13 +159,13 @@ private fun OverviewHead(onClose: () -> Unit) {
     HeadRow {
         Column(Modifier.weight(1f)) {
             Txt(
-                "Meine Listen",
+                stringResource(R.string.lists_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-0.02).em,
             )
             Txt(
-                "Reise-Rechnungen je Zielwährung",
+                stringResource(R.string.lists_subtitle),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Tokens.Ink2,
@@ -193,7 +195,7 @@ private fun DetailHead(
                 overflow = TextOverflow.Ellipsis,
             )
             Txt(
-                "${list.items.size} Positionen · ${list.currency}",
+                stringResource(R.string.positions_currency, list.items.size, list.currency),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Tokens.Ink2,
@@ -246,14 +248,14 @@ private fun EmptyState() {
             Ic(IcList, tint = Tokens.Ink3, modifier = Modifier.size(26.dp))
         }
         Txt(
-            "Noch keine Listen",
+            stringResource(R.string.no_lists),
             modifier = Modifier.padding(top = 14.dp),
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = Tokens.Ink,
         )
         Txt(
-            "Scanne Preise und sammle sie in einer Liste deiner Zielwährung — z. B. dein Reisebudget.",
+            stringResource(R.string.no_lists_hint),
             modifier = Modifier.padding(top = 5.dp),
             fontSize = 13.sp,
             color = Tokens.Ink2,
@@ -288,7 +290,7 @@ private fun ListCard(l: TravelList, onClick: () -> Unit) {
                 letterSpacing = (-0.01).em,
             )
             Txt(
-                "${l.items.size} Positionen · ${l.currency}",
+                stringResource(R.string.positions_currency, l.items.size, l.currency),
                 modifier = Modifier.padding(top = 3.dp),
                 fontSize = 12.5.sp,
                 color = Tokens.Ink2,
@@ -342,7 +344,7 @@ private fun NewListRow(onNew: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(9.dp, Alignment.CenterHorizontally),
     ) {
         Ic(IcPlus, tint = Tokens.AccentDeep, modifier = Modifier.size(19.dp))
-        Txt("Neue Liste", fontSize = 14.5.sp, fontWeight = FontWeight.Bold, color = Tokens.AccentDeep)
+        Txt(stringResource(R.string.new_list), fontSize = 14.5.sp, fontWeight = FontWeight.Bold, color = Tokens.AccentDeep)
     }
 }
 
@@ -375,7 +377,7 @@ private fun ColumnScope.DetailBody(
                 .padding(20.dp),
         ) {
             Txt(
-                "GESAMT",
+                stringResource(R.string.total),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.1.em,
@@ -413,7 +415,7 @@ private fun ColumnScope.DetailBody(
         }
 
         Txt(
-            "POSITIONEN",
+            stringResource(R.string.positions_label),
             modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 10.dp),
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
@@ -423,7 +425,7 @@ private fun ColumnScope.DetailBody(
 
         if (list.items.isEmpty()) {
             Txt(
-                "Noch nichts hinzugefügt. Scanne einen Preis und tippe „Zu Liste hinzufügen“.",
+                stringResource(R.string.no_items_hint),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 14.dp),
@@ -480,7 +482,7 @@ private fun ItemRow(item: ListItem, currency: String, onEdit: () -> Unit, onDele
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Txt("aus " + fmt(item.raw, item.from), fontSize = 12.sp, color = Tokens.Ink2)
+                    Txt(stringResource(R.string.from_amount, fmtNum(item.raw, item.from), item.from), fontSize = 12.sp, color = Tokens.Ink2)
                 }
                 Txt(
                     fmt(item.value, currency),
@@ -501,7 +503,7 @@ private fun ItemRow(item: ListItem, currency: String, onEdit: () -> Unit, onDele
                         letterSpacing = NumSpacing,
                         color = Tokens.Ink,
                     )
-                    Txt("aus " + fmt(item.raw, item.from), fontSize = 12.sp, color = Tokens.Ink2)
+                    Txt(stringResource(R.string.from_amount, fmtNum(item.raw, item.from), item.from), fontSize = 12.sp, color = Tokens.Ink2)
                 }
             }
         }

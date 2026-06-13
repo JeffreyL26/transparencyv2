@@ -7,6 +7,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 /**
  * Persistente Keys (Handoff §7): Pins (max 4, Reihenfolge = Pin-Reihenfolge)
@@ -20,6 +23,8 @@ class Prefs(private val context: Context) {
     private val onboardedKey = booleanPreferencesKey("fxlens_onboarded")
     private val seededKey = booleanPreferencesKey("fxlens_seeded")
     private val recentsKey = stringPreferencesKey("fxlens_recents")
+    private val customsKey = stringPreferencesKey("fxlens_customs")
+    private val json = Json { ignoreUnknownKeys = true }
 
     val pins: Flow<List<String>> = context.dataStore.data.map { p ->
         p[pinsKey]?.split(",")?.filter { it.isNotBlank() } ?: CurrencyMeta.DEFAULT_PINNED
@@ -35,6 +40,15 @@ class Prefs(private val context: Context) {
             val cur = p[recentsKey]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
             p[recentsKey] = (listOf(code) + cur.filterNot { it == code }).take(12).joinToString(",")
         }
+    }
+
+    /** Vom Nutzer angelegte Custom-Währungen (max. 5, §F2). */
+    val customs: Flow<List<CustomCurrency>> = context.dataStore.data.map { p ->
+        p[customsKey]?.let { runCatching { json.decodeFromString<List<CustomCurrency>>(it) }.getOrNull() } ?: emptyList()
+    }
+
+    suspend fun setCustoms(list: List<CustomCurrency>) {
+        context.dataStore.edit { it[customsKey] = json.encodeToString(list.take(5)) }
     }
 
     /** null solange noch nicht geladen ist nicht nötig — DataStore emittiert sofort. */
