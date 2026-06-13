@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -27,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,6 +75,10 @@ fun PickerSheet(
     val query = q.trim().lowercase()
     val searching = query.isNotEmpty()
     val full = pinned.size >= 4
+    // Bei offener Tastatur die Trefferliste verkürzen, damit das Suchfeld oben
+    // über der Tastatur sichtbar bleibt (zusätzlich zum imePadding des Sheets, §2).
+    val imeOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val listMax = if (imeOpen) 232.dp else 372.dp
 
     SheetScaffold(onDismiss = onClose) {
         SheetTitle(if (slot == PickerSlot.FROM) "Eingescannte Währung" else "Zielwährung")
@@ -108,8 +115,8 @@ fun PickerSheet(
             }
         }
 
-        // Liste (.sheet-list): max-Höhe 372
-        LazyColumn(Modifier.heightIn(max = 372.dp)) {
+        // Liste (.sheet-list): max-Höhe 372, bei offener Tastatur verkürzt
+        LazyColumn(Modifier.heightIn(max = listMax)) {
             if (searching) {
                 val hits = allCodes.filter { code ->
                     code.lowercase().contains(query) ||

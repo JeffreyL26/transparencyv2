@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.domain.CreateMode
+import com.transparency.fxlens.domain.ListItem
 import com.transparency.fxlens.domain.TravelList
 import com.transparency.fxlens.domain.convert
 import com.transparency.fxlens.domain.fmt
@@ -75,11 +76,12 @@ fun AddToListSheet(
     raw: Double,
     rates: Map<String, Double>,
     lists: List<TravelList>,
-    onAdd: (String) -> Unit,
-    onNew: () -> Unit,
+    onAdd: (listId: String, label: String?) -> Unit,
+    onNew: (label: String?) -> Unit,
     onClose: () -> Unit,
 ) {
     val conv = convert(raw, from, to, rates)
+    var label by remember { mutableStateOf("") }
     SheetScaffold(onDismiss = onClose) {
         SheetTitle("Zu Liste hinzufügen")
 
@@ -87,7 +89,7 @@ fun AddToListSheet(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(start = 2.dp, end = 2.dp, bottom = 14.dp)
+                .padding(start = 2.dp, end = 2.dp, bottom = 12.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(Tokens.SurfaceWarm)
                 .border(1.dp, Tokens.Line, RoundedCornerShape(16.dp))
@@ -115,18 +117,33 @@ fun AddToListSheet(
             Flag(to, 38.dp)
         }
 
+        // optionaler Name der Position (z. B. „Hotel") — wird mitgespeichert (§3).
+        Column(
+            Modifier.padding(start = 2.dp, end = 2.dp, bottom = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FieldLabel("Name (optional)")
+            Field {
+                FieldInput(
+                    value = label,
+                    onValueChange = { label = it },
+                    placeholder = "z. B. Hotel, Abendessen",
+                )
+            }
+        }
+
         Column(
             Modifier
-                .heightIn(max = 372.dp)
+                .heightIn(max = 320.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             if (lists.isEmpty()) {
                 SheetNote(to)
             }
             lists.forEach { list ->
-                ListRow(list, onClick = { onAdd(list.id) })
+                ListRow(list, onClick = { onAdd(list.id, label) })
             }
-            DashedNewRow(text = "Neue $to-Liste", onClick = onNew)
+            DashedNewRow(text = "Neue $to-Liste", onClick = { onNew(label) })
         }
     }
 }
@@ -229,12 +246,16 @@ fun CreateListSheet(
     mode: CreateMode,
     currency: String,
     allCodes: List<String>,
+    pinned: List<String>,
+    recents: List<String>,
     onCreate: (name: String, currency: String, budget: Double?) -> Unit,
     onClose: () -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var cur by remember { mutableStateOf(currency) }
     var budget by remember { mutableStateOf("") }
+    // Vorschläge: gepinnte zuerst, dann zuletzt genutzte, dann alphabetisch (§6).
+    val suggested = remember(allCodes, pinned, recents) { suggestedOrder(allCodes, pinned, recents) }
 
     SheetScaffold(onDismiss = onClose) {
         SheetTitle("Neue Liste")
@@ -258,7 +279,7 @@ fun CreateListSheet(
             if (mode == CreateMode.ADD) {
                 FixedCurrencyField(currency)
             } else {
-                CurScroller(allCodes = allCodes, selected = cur, onSelect = { cur = it })
+                CurScroller(allCodes = suggested, selected = cur, onSelect = { cur = it })
             }
 
             FieldLabel("Budget (optional)")
@@ -353,8 +374,119 @@ fun EditListSheet(
 }
 
 /* ============================================================
+   Screen 7 (Verwalten) — „Position benennen" (Bottom-Sheet, z65)
+   ============================================================ */
+
+@Composable
+fun EditItemSheet(
+    item: ListItem,
+    currency: String,
+    onSave: (label: String?) -> Unit,
+    onDelete: () -> Unit,
+    onClose: () -> Unit,
+) {
+    var label by remember { mutableStateOf(item.label ?: "") }
+    var confirm by remember { mutableStateOf(false) }
+
+    SheetScaffold(onDismiss = onClose) {
+        SheetTitle("Position benennen")
+
+        // amount-chip (read-only): umgerechneter Betrag + Herkunft
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 2.dp, end = 2.dp, bottom = 14.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Tokens.SurfaceWarm)
+                .border(1.dp, Tokens.Line, RoundedCornerShape(16.dp))
+                .padding(horizontal = 15.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Txt(
+                    fmt(item.value, currency),
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = Grotesk,
+                    letterSpacing = NumSpacing,
+                    lineHeight = 26.sp,
+                    color = Tokens.Ink,
+                )
+                Txt(
+                    "aus ${fmt(item.raw, item.from)} gescannt",
+                    fontSize = 12.sp,
+                    color = Tokens.Ink2,
+                    modifier = Modifier.padding(top = 5.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Flag(item.from, 38.dp)
+        }
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 2.dp, end = 2.dp, bottom = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            FieldLabel("Name (optional)")
+            Field {
+                FieldInput(
+                    value = label,
+                    onValueChange = { label = it },
+                    placeholder = "z. B. Hotel, Abendessen",
+                    autoFocus = true,
+                )
+            }
+
+            PrimaryButton(
+                text = "Speichern",
+                modifier = Modifier.padding(top = 6.dp),
+                onClick = { onSave(label) },
+            )
+
+            if (!confirm) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .scaleClick(scale = 0.99f, onClick = { confirm = true })
+                        .clip(RoundedCornerShape(14.dp))
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Txt("Position löschen", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Tokens.Danger)
+                }
+            } else {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, end = 4.dp, top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Txt("Wirklich löschen?", fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, color = Tokens.Ink)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ConfirmActionBtn("Abbrechen", bg = Tokens.SurfaceWarm, fg = Tokens.Ink2) { confirm = false }
+                        ConfirmActionBtn("Löschen", bg = Tokens.Danger, fg = Color.White, onClick = onDelete)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* ============================================================
    gemeinsame Bausteine
    ============================================================ */
+
+/** Vorschlagsreihenfolge der Währungen: gepinnte, dann zuletzt genutzte, dann alphabetisch (§6). */
+private fun suggestedOrder(allCodes: List<String>, pinned: List<String>, recents: List<String>): List<String> {
+    val present = allCodes.toHashSet()
+    val pins = pinned.filter { it in present }
+    val used = recents.filter { it in present && it !in pins }
+    val rest = allCodes.filter { it !in pins && it !in used }
+    return pins + used + rest
+}
 
 /** Fixe Listen-Währung: Chip mit Flagge, „{code} · {name}" und „fest". */
 @Composable

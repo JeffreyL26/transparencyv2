@@ -25,6 +25,13 @@ object CurrencyMeta {
     /** Standard-Pins (Fallback, falls Onboarding übersprungen). */
     val DEFAULT_PINNED = listOf("EUR", "USD", "GBP", "CHF")
 
+    /**
+     * Aus der App ausgeblendete Codes: außer Kurs (SLL → SLE, ZWL → ZWG) bzw.
+     * keine echte Währung (XDR = IWF-Sonderziehungsrecht). Werden aus allen
+     * Auswahl-Listen gefiltert.
+     */
+    val HIDDEN = setOf("SLL", "ZWL", "XDR")
+
     /** Namen exakt nach Handoff-Tabelle §6 + Nicht-ISO-Codes. */
     private val nameOverrides = mapOf(
         "EUR" to "Euro",
@@ -54,7 +61,10 @@ object CurrencyMeta {
         "TVD" to "Tuvalu-Dollar",
         "XCG" to "Karib. Gulden",
         "ZWG" to "Simbabwe-Gold",
-        "XDR" to "Sonderziehungsrecht",
+        "XAF" to "CFA-Franc (BEAC)",
+        "XOF" to "CFA-Franc (BCEAO)",
+        "XPF" to "CFP-Franc",
+        "XCD" to "Ostkarib. Dollar",
     )
 
     /** Symbole exakt nach Handoff-Tabelle §6 + sinnvolle Symbole für Sondercodes. */
@@ -85,7 +95,6 @@ object CurrencyMeta {
         "TVD" to "$",
         "XCG" to "ƒ",
         "ZWG" to "ZiG",
-        "XDR" to "SDR",
         "XAF" to "FCFA",
         "XOF" to "CFA",
         "XPF" to "₣",
@@ -97,10 +106,17 @@ object CurrencyMeta {
         "EUR" to "eu",
         "ANG" to "cw",
         "XCG" to "cw",
+        // CFP-Franc: Flagge Frankreichs (frz. Pazifik-Territorien).
+        "XPF" to "fr",
+        // CFA-Franc & Ostkarib. Dollar: generierte Locator-Karten der Währungsregion
+        // (assets/flags/{xaf,xof,xcd}.png) statt einer Landesflagge.
+        "XAF" to "xaf",
+        "XOF" to "xof",
+        "XCD" to "xcd",
     )
 
     /** Codes ohne eindeutiges Land — kreisförmiger Symbol-Fallback statt Flagge. */
-    private val noFlag = setOf("XAF", "XOF", "XPF", "XCD", "XDR")
+    private val noFlag = emptySet<String>()
 
     private val cache = ConcurrentHashMap<String, CurrencyInfo>()
 

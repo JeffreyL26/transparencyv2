@@ -1,8 +1,11 @@
 package com.transparency.fxlens.scan
 
 import android.graphics.RectF
+import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.mlkit.vision.MlKitAnalyzer
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
@@ -37,7 +40,7 @@ private val RoiHeight = 116.dp
 fun CameraScanPreview(
     enabled: Boolean,
     analyzeActive: Boolean,
-    onValue: (Double?) -> Unit,
+    onValues: (List<Detection>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!enabled) {
@@ -52,7 +55,7 @@ fun CameraScanPreview(
 
     // Der Analyzer-Callback wird genau einmal gesetzt — aktuelle Werte über State lesen.
     val activeState = rememberUpdatedState(analyzeActive)
-    val onValueState = rememberUpdatedState(onValue)
+    val onValuesState = rememberUpdatedState(onValues)
     val roiPxState = rememberUpdatedState(
         with(density) { RoiWidth.toPx() to RoiHeight.toPx() }
     )
@@ -69,6 +72,17 @@ fun CameraScanPreview(
         LifecycleCameraController(context).apply {
             setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            // Höhere Analyse-Auflösung → kleine/entfernte Zahlen werden zuverlässiger
+            // erkannt (§4). Nur das jeweils neueste Frame wird analysiert (kein Stau).
+            imageAnalysisResolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(
+                    ResolutionStrategy(
+                        Size(1280, 720),
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+                    )
+                )
+                .build()
+            imageAnalysisBackpressureStrategy = ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
         }
     }
 
@@ -91,7 +105,7 @@ fun CameraScanPreview(
                             (w + roiW) / 2f,
                             (h + roiH) / 2f,
                         )
-                        onValueState.value(bestPriceInRoi(result?.getValue(recognizer), roi))
+                        onValuesState.value(pricesInRoi(result?.getValue(recognizer), roi))
                     }
                 }
             },

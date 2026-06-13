@@ -25,6 +25,7 @@ import com.transparency.fxlens.ui.components.AppToast
 import com.transparency.fxlens.ui.screens.AddToListSheet
 import com.transparency.fxlens.ui.screens.CreateListSheet
 import com.transparency.fxlens.ui.screens.EdgeTab
+import com.transparency.fxlens.ui.screens.EditItemSheet
 import com.transparency.fxlens.ui.screens.EditListSheet
 import com.transparency.fxlens.ui.screens.GlassMenu
 import com.transparency.fxlens.ui.screens.ListsPanel
@@ -44,6 +45,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
     val rates by vm.rates.collectAsState()
     val lists by vm.lists.collectAsState()
     val pins by vm.pins.collectAsState()
+    val recents by vm.recents.collectAsState()
     val allCodes by vm.allCodes.collectAsState()
     val onboarded by vm.onboarded.collectAsState()
 
@@ -63,7 +65,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
             CameraScanPreview(
                 enabled = hasCameraPermission && onboarded == true,
                 analyzeActive = vm.scanPhase is ScanPhase.Scanning && !vm.panelOpen && onboarded == true,
-                onValue = vm::onAnalyzerValue,
+                onValues = vm::onAnalyzerValues,
                 modifier = Modifier.fillMaxSize(),
             )
 
@@ -123,15 +125,15 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
 
             // „Zu Liste hinzufügen" (Screen 4)
             if (vm.addOpen) {
-                val raw = (vm.scanPhase as? ScanPhase.Locked)?.raw ?: 0.0
+                val raw = vm.addRaw ?: 0.0
                 AddToListSheet(
                     from = vm.from,
                     to = vm.to,
                     raw = raw,
                     rates = rates.rates,
                     lists = lists.filter { it.currency == vm.to },
-                    onAdd = vm::addToExisting,
-                    onNew = { vm.startCreate(CreateMode.ADD) },
+                    onAdd = { id, label -> vm.addToExisting(id, label) },
+                    onNew = { label -> vm.startCreate(CreateMode.ADD, label) },
                     onClose = vm::closeAdd,
                 )
             }
@@ -146,6 +148,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
                 onNew = { vm.startCreate(CreateMode.PANEL) },
                 onEdit = vm::startEdit,
                 onDeleteItem = vm::deleteItem,
+                onEditItem = vm::startEditItem,
                 modifier = Modifier.fillMaxSize(),
             )
 
@@ -155,9 +158,29 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean) {
                     mode = req.mode,
                     currency = req.currency,
                     allCodes = allCodes,
+                    pinned = pins,
+                    recents = recents,
                     onCreate = vm::doCreate,
                     onClose = vm::cancelCreate,
                 )
+            }
+
+            // „Position benennen" (z65 — über dem Panel)
+            vm.editingItem?.let { target ->
+                lists.find { it.id == target.listId }
+                    ?.items?.find { it.id == target.itemId }
+                    ?.let { item ->
+                        EditItemSheet(
+                            item = item,
+                            currency = lists.find { it.id == target.listId }?.currency ?: vm.to,
+                            onSave = vm::saveItemLabel,
+                            onDelete = {
+                                vm.deleteItem(target.listId, target.itemId)
+                                vm.cancelEditItem()
+                            },
+                            onClose = vm::cancelEditItem,
+                        )
+                    }
             }
 
             // „Liste bearbeiten" (z65 — über dem Panel)

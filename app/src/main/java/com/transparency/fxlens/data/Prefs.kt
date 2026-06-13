@@ -19,9 +19,22 @@ class Prefs(private val context: Context) {
     private val pinsKey = stringPreferencesKey("fxlens_pins")
     private val onboardedKey = booleanPreferencesKey("fxlens_onboarded")
     private val seededKey = booleanPreferencesKey("fxlens_seeded")
+    private val recentsKey = stringPreferencesKey("fxlens_recents")
 
     val pins: Flow<List<String>> = context.dataStore.data.map { p ->
         p[pinsKey]?.split(",")?.filter { it.isNotBlank() } ?: CurrencyMeta.DEFAULT_PINNED
+    }
+
+    /** Zuletzt genutzte Währungen, neueste zuerst (max 12) — Vorschläge bei Listenanlage (§6). */
+    val recents: Flow<List<String>> = context.dataStore.data.map { p ->
+        p[recentsKey]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+    }
+
+    suspend fun addRecent(code: String) {
+        context.dataStore.edit { p ->
+            val cur = p[recentsKey]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+            p[recentsKey] = (listOf(code) + cur.filterNot { it == code }).take(12).joinToString(",")
+        }
     }
 
     /** null solange noch nicht geladen ist nicht nötig — DataStore emittiert sofort. */

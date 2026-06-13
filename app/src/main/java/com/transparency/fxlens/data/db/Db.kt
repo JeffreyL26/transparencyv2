@@ -49,6 +49,8 @@ data class ListItemEntity(
     val fromCode: String,
     val value: Double,
     val ts: Long,
+    /** Optionaler Name der Position; null = unbenannt. */
+    val label: String? = null,
 )
 
 data class ListWithItems(
@@ -82,11 +84,21 @@ interface ListsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: ListItemEntity)
 
+    @Query("UPDATE items SET label = :label WHERE id = :id")
+    suspend fun updateItemLabel(id: String, label: String?)
+
     @Query("DELETE FROM items WHERE id = :id")
     suspend fun deleteItem(id: String)
 }
 
-@Database(entities = [TravelListEntity::class, ListItemEntity::class], version = 1, exportSchema = false)
+@Database(entities = [TravelListEntity::class, ListItemEntity::class], version = 2, exportSchema = false)
 abstract class FxDatabase : RoomDatabase() {
     abstract fun listsDao(): ListsDao
+}
+
+/** v1 → v2: optionale Spalte `label` für benannte Positionen (§3). */
+val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+    override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE items ADD COLUMN label TEXT")
+    }
 }

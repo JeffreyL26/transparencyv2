@@ -7,6 +7,8 @@ data class ListItem(
     val from: String,
     val value: Double,
     val ts: Long,
+    /** Optionaler Name der Position (z. B. „Hotel", „Abendessen"). */
+    val label: String? = null,
 )
 
 /** Reise-Budget-Liste, an genau eine Zielwährung gebunden (§7). */
@@ -27,8 +29,8 @@ enum class PickerSlot { FROM, TO }
 /** Kontext des „Neue Liste“-Sheets: aus dem Add-Flow (Währung fix) oder aus dem Panel. */
 enum class CreateMode { ADD, PANEL }
 
-/** Scan-State-Maschine (§12): scanning → locked. */
+/** Scan-State-Maschine (§12): scanning → locked. `raws` = erkannte Zahlen in Lesereihenfolge. */
 sealed interface ScanPhase {
     data object Scanning : ScanPhase
-    data class Locked(val raw: Double) : ScanPhase
+    data class Locked(val raws: List<Double>) : ScanPhase
 }

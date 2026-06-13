@@ -1,4 +1,7 @@
-# FX Lens — Kamera-Währungsscanner mit Reise-Budget-Listen (Android)
+# ScanConvert — Kamera-Währungsscanner mit Reise-Budget-Listen (Android)
+
+> Vormals „FX Lens". Der Anzeigename der App ist **ScanConvert**; das interne
+> Package (`com.transparency.fxlens`) bleibt aus Kompatibilitätsgründen unverändert.
 
 Native Android-Umsetzung (Kotlin, Jetpack Compose) des Design-Handoffs in
 [`design_handoff/`](design_handoff/README.md) — ein 1:1-Nachbau der HTML/React-Referenz

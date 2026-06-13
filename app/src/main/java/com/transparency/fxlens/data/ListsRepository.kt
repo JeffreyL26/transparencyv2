@@ -70,12 +70,14 @@ class ListsRepository(private val dao: ListsDao) {
 
     suspend fun addItem(listId: String, item: ListItem) = dao.insertItem(item.toEntity(listId))
 
+    suspend fun updateItemLabel(itemId: String, label: String?) = dao.updateItemLabel(itemId, label)
+
     suspend fun deleteItem(itemId: String) = dao.deleteItem(itemId)
 
     private fun uid(): String = UUID.randomUUID().toString().take(8)
 
-    private fun ListItemEntity.toDomain() = ListItem(id, raw, fromCode, value, ts)
+    private fun ListItemEntity.toDomain() = ListItem(id, raw, fromCode, value, ts, label)
 
     private fun ListItem.toEntity(listId: String) =
-        ListItemEntity(id = id, listId = listId, raw = raw, fromCode = from, value = value, ts = ts)
+        ListItemEntity(id = id, listId = listId, raw = raw, fromCode = from, value = value, ts = ts, label = label)
 }

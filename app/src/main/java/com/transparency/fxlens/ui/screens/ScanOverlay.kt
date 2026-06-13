@@ -28,7 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -78,14 +78,14 @@ fun ScanLayer(
     rates: Map<String, Double>,
     dim: Boolean,
     onRescan: () -> Unit,
-    onAdd: () -> Unit,
+    onAdd: (Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val locked = phase is ScanPhase.Locked
 
-    // Letzten erkannten Wert merken, damit die Karte beim Ausfahren ihre Werte behält.
-    var lastRaw by remember { mutableDoubleStateOf(0.0) }
-    (phase as? ScanPhase.Locked)?.let { lastRaw = it.raw }
+    // Letzte erkannte Werte merken, damit die Karte beim Ausfahren ihren Inhalt behält.
+    var lastRaws by remember { mutableStateOf(listOf<Double>()) }
+    (phase as? ScanPhase.Locked)?.let { if (it.raws.isNotEmpty()) lastRaws = it.raws }
 
     Box(modifier) {
         ScanBox(
@@ -120,7 +120,7 @@ fun ScanLayer(
 
         ResultCard(
             locked = locked,
-            raw = lastRaw,
+            raws = lastRaws,
             from = from,
             to = to,
             rates = rates,
@@ -266,27 +266,58 @@ private fun ScanBox(locked: Boolean, onRescan: () -> Unit, modifier: Modifier = 
                 Txt("Erkannt", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
+
+        // Hinweis am unteren Rahmen-Rand: bei erkanntem Wert „Tippen, um neu zu scannen".
+        val rescanHintAlpha by animateFloatAsState(
+            targetValue = if (locked) 1f else 0f,
+            animationSpec = motionTween(300, Motion.EaseCss),
+            label = "rescanHint",
+        )
+        if (rescanHintAlpha > 0.01f) {
+            Row(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = 21.dp)
+                    .graphicsLayer { alpha = rescanHintAlpha }
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Tokens.HintBg)
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Txt(
+                    "Tippen, um neu zu scannen",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 
-/** Ergebnis-Karte (res-card): slidet bei locked ein (0.42 s, §11), mit Add-Button. */
+/**
+ * Ergebnis-Karte (res-card): slidet bei locked ein (0.42 s, §11). Eine erkannte Zahl
+ * wird prominent gezeigt (mit Add-Button), mehrere Zahlen gestapelt — jede Zeile mit
+ * eigenem „+" zum Hinzufügen.
+ */
 @Composable
 private fun ResultCard(
     locked: Boolean,
-    raw: Double,
+    raws: List<Double>,
     from: String,
     to: String,
     rates: Map<String, Double>,
-    onAdd: () -> Unit,
+    onAdd: (Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val conv = convert(raw, from, to, rates)
     val slide by animateFloatAsState(
         targetValue = if (locked) 0f else 1f,
         animationSpec = motionTween(420, Motion.EaseSheet),
         label = "resCard",
     )
     val cardShape = RoundedCornerShape(26.dp)
+    val multi = raws.size > 1
     Column(
         modifier
             .fillMaxWidth()
@@ -297,14 +328,15 @@ private fun ResultCard(
             .border(1.dp, Color(0xB3FFFFFF), cardShape)
             .padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
+        // Kopfzeile: Status + aktueller Kurs.
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
-            modifier = Modifier.padding(bottom = 14.dp),
+            modifier = Modifier.padding(bottom = if (multi) 8.dp else 14.dp),
         ) {
             LiveDot(7.dp)
             Txt(
-                "UMGERECHNET",
+                if (multi) "${raws.size} ERKANNT" else "UMGERECHNET",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.1.em,
@@ -322,81 +354,166 @@ private fun ResultCard(
             Txt(" $to", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Tokens.Ink2)
         }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        if (multi) {
+            raws.forEachIndexed { i, raw ->
+                if (i > 0) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                            .height(1.dp)
+                            .background(Tokens.Line)
+                    )
+                }
+                StackedRow(raw = raw, from = from, to = to, rates = rates, onAdd = { onAdd(raw) })
+            }
+        } else {
+            val raw = raws.firstOrNull() ?: 0.0
+            SingleRow(raw = raw, from = from, to = to, rates = rates)
+            AddBar(onClick = { onAdd(raw) })
+        }
+    }
+}
+
+/** Prominente Einzel-Umrechnung: VON-Betrag → ZU-Betrag. */
+@Composable
+private fun SingleRow(raw: Double, from: String, to: String, rates: Map<String, Double>) {
+    val conv = convert(raw, from, to, rates)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Txt(
+                from,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.06.em,
+                color = Tokens.Ink3,
+                modifier = Modifier.padding(bottom = 3.dp),
+            )
+            Txt(
+                fmtNum(raw, from),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = Grotesk,
+                letterSpacing = NumSpacing,
+                color = Tokens.Ink2,
+                maxLines = 1,
+            )
+        }
+        Box(
+            Modifier
+                .size(34.dp)
+                .background(Tokens.AccentSoft, CircleShape),
+            contentAlignment = Alignment.Center,
         ) {
-            Column(Modifier.weight(1f)) {
-                Txt(
-                    from,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.06.em,
-                    color = Tokens.Ink3,
-                    modifier = Modifier.padding(bottom = 3.dp),
-                )
-                Txt(
-                    fmtNum(raw, from),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = Grotesk,
-                    letterSpacing = NumSpacing,
-                    color = Tokens.Ink2,
-                    maxLines = 1,
-                )
-            }
-            Box(
-                Modifier
-                    .size(34.dp)
-                    .background(Tokens.AccentSoft, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Ic(IcArrow, tint = Tokens.AccentDeep, modifier = Modifier.size(17.dp))
-            }
-            Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                Txt(
-                    to,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.06.em,
-                    color = Tokens.Ink3,
-                    modifier = Modifier.padding(bottom = 3.dp),
-                )
+            Ic(IcArrow, tint = Tokens.AccentDeep, modifier = Modifier.size(17.dp))
+        }
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+            Txt(
+                to,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.06.em,
+                color = Tokens.Ink3,
+                modifier = Modifier.padding(bottom = 3.dp),
+            )
+            Txt(
+                fmtNum(conv, to),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = Grotesk,
+                letterSpacing = NumSpacing,
+                color = Tokens.Ink,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+/** Volle Add-Leiste (rc-add) für den Einzelfall. */
+@Composable
+private fun AddBar(onClick: () -> Unit) {
+    val addShape = RoundedCornerShape(15.dp)
+    Row(
+        Modifier
+            .padding(top = 14.dp)
+            .fillMaxWidth()
+            .shadow(8.dp, addShape, ambientColor = Tokens.AccentGlow, spotColor = Tokens.AccentGlow)
+            .clip(addShape)
+            .background(Tokens.Accent)
+            .scaleClick(onClick = onClick)
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Ic(IcPlus, tint = Color.White, modifier = Modifier.size(19.dp))
+        Spacer(Modifier.size(9.dp))
+        Txt(
+            "Zu Liste hinzufügen",
+            fontSize = 14.5.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (-0.01).em,
+            color = Color.White,
+        )
+    }
+}
+
+/** Kompakte Zeile im Mehrfach-Fall: umgerechneter Betrag + Herkunft + eigenes „+". */
+@Composable
+private fun StackedRow(
+    raw: Double,
+    from: String,
+    to: String,
+    rates: Map<String, Double>,
+    onAdd: () -> Unit,
+) {
+    val conv = convert(raw, from, to, rates)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Txt(
                     fmtNum(conv, to),
-                    fontSize = 32.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = Grotesk,
                     letterSpacing = NumSpacing,
                     color = Tokens.Ink,
                     maxLines = 1,
+                    modifier = Modifier.alignByBaseline(),
+                )
+                Txt(
+                    to,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Tokens.Ink3,
+                    modifier = Modifier.alignByBaseline(),
                 )
             }
-        }
-
-        // rc-add: 14.5/700, Padding 12, Radius 15, Glow
-        val addShape = RoundedCornerShape(15.dp)
-        Row(
-            Modifier
-                .padding(top = 14.dp)
-                .fillMaxWidth()
-                .shadow(8.dp, addShape, ambientColor = Tokens.AccentGlow, spotColor = Tokens.AccentGlow)
-                .clip(addShape)
-                .background(Tokens.Accent)
-                .scaleClick(onClick = onAdd)
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Ic(IcPlus, tint = Color.White, modifier = Modifier.size(19.dp))
-            Spacer(Modifier.size(9.dp))
             Txt(
-                "Zu Liste hinzufügen",
-                fontSize = 14.5.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.01).em,
-                color = Color.White,
+                "aus ${fmtNum(raw, from)} $from",
+                fontSize = 12.sp,
+                color = Tokens.Ink2,
+                modifier = Modifier.padding(top = 2.dp),
             )
+        }
+        Box(
+            Modifier
+                .size(38.dp)
+                .shadow(6.dp, CircleShape, ambientColor = Tokens.AccentGlow, spotColor = Tokens.AccentGlow)
+                .clip(CircleShape)
+                .background(Tokens.Accent)
+                .scaleClick(onClick = onAdd),
+            contentAlignment = Alignment.Center,
+        ) {
+            Ic(IcPlus, tint = Color.White, modifier = Modifier.size(18.dp))
         }
     }
 }

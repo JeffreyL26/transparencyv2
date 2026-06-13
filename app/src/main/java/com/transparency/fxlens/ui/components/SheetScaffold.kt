@@ -1,5 +1,6 @@
 package com.transparency.fxlens.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -57,6 +59,8 @@ fun SheetScaffold(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    // Zurück-Taste schließt das oberste Sheet (z. B. „Neue Liste") statt durchzufallen (§7).
+    BackHandler(onBack = onDismiss)
     var entered by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { entered = true }
     val slide by animateFloatAsState(
@@ -85,6 +89,8 @@ fun SheetScaffold(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                // Hebt das gesamte Sheet dynamisch über die Tastatur (§2).
+                .imePadding()
                 .graphicsLayer { translationY = slide * size.height }
                 .shadow(20.dp, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp, bottomStart = 42.dp, bottomEnd = 42.dp))
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp, bottomStart = 42.dp, bottomEnd = 42.dp))

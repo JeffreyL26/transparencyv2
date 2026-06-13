@@ -7,6 +7,7 @@ import com.transparency.fxlens.data.ListsRepository
 import com.transparency.fxlens.data.Prefs
 import com.transparency.fxlens.data.RatesRepository
 import com.transparency.fxlens.data.db.FxDatabase
+import com.transparency.fxlens.data.db.MIGRATION_1_2
 
 class FxLensApp : Application() {
     lateinit var container: AppContainer
@@ -21,6 +22,8 @@ class FxLensApp : Application() {
 class AppContainer(context: Context) {
     val prefs = Prefs(context)
     val ratesRepository = RatesRepository(context)
-    private val db = Room.databaseBuilder(context, FxDatabase::class.java, "fxlens.db").build()
+    private val db = Room.databaseBuilder(context, FxDatabase::class.java, "fxlens.db")
+        .addMigrations(MIGRATION_1_2)
+        .build()
     val listsRepository = ListsRepository(db.listsDao())
 }

@@ -46,17 +46,19 @@ private val flagMisses = ConcurrentHashMap.newKeySet<String>()
 private fun rememberFlagBitmap(cc: String?): ImageBitmap? {
     if (cc == null) return null
     val context = LocalContext.current
-    val cached = flagCache[cc]
-    val bmp by produceState(initialValue = cached, key1 = cc) {
-        if (value == null && cc !in flagMisses) {
-            value = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.assets.open("flags/$cc.png").use {
-                        BitmapFactory.decodeStream(it).asImageBitmap()
-                    }
-                }.getOrNull().also { decoded ->
-                    if (decoded != null) flagCache[cc] = decoded else flagMisses.add(cc)
+    // produceState behält bei Key-Wechsel den alten value; deshalb pro cc explizit
+    // neu setzen (sonst bleibt beim Swap die Flagge der vorherigen Währung stehen).
+    val bmp by produceState<ImageBitmap?>(initialValue = flagCache[cc], key1 = cc) {
+        flagCache[cc]?.let { value = it; return@produceState }
+        if (cc in flagMisses) { value = null; return@produceState }
+        value = null
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                context.assets.open("flags/$cc.png").use {
+                    BitmapFactory.decodeStream(it).asImageBitmap()
                 }
+            }.getOrNull().also { decoded ->
+                if (decoded != null) flagCache[cc] = decoded else flagMisses.add(cc)
             }
         }
     }

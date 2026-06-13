@@ -86,6 +86,7 @@ fun ListsPanel(
     onNew: () -> Unit,
     onEdit: (String) -> Unit,
     onDeleteItem: (listId: String, itemId: String) -> Unit,
+    onEditItem: (listId: String, itemId: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val p by animateFloatAsState(
@@ -123,7 +124,7 @@ fun ListsPanel(
             ) {
                 if (list != null) {
                     DetailHead(list = list, onSelect = onSelect, onEdit = onEdit, onClose = onClose)
-                    DetailBody(list = list, onDeleteItem = onDeleteItem)
+                    DetailBody(list = list, onDeleteItem = onDeleteItem, onEditItem = onEditItem)
                 } else {
                     OverviewHead(onClose = onClose)
                     OverviewBody(lists = lists, onSelect = onSelect, onNew = onNew)
@@ -351,6 +352,7 @@ private fun NewListRow(onNew: () -> Unit) {
 private fun ColumnScope.DetailBody(
     list: TravelList,
     onDeleteItem: (listId: String, itemId: String) -> Unit,
+    onEditItem: (listId: String, itemId: String) -> Unit,
 ) {
     val total = list.total()
     Column(
@@ -434,35 +436,74 @@ private fun ColumnScope.DetailBody(
 
         // Neueste zuerst
         list.items.reversed().forEach { item ->
-            ItemRow(item = item, currency = list.currency, onDelete = { onDeleteItem(list.id, item.id) })
+            ItemRow(
+                item = item,
+                currency = list.currency,
+                onEdit = { onEditItem(list.id, item.id) },
+                onDelete = { onDeleteItem(list.id, item.id) },
+            )
         }
     }
 }
 
 @Composable
-private fun ItemRow(item: ListItem, currency: String, onDelete: () -> Unit) {
+private fun ItemRow(item: ListItem, currency: String, onEdit: () -> Unit, onDelete: () -> Unit) {
     val shape = RoundedCornerShape(15.dp)
+    val name = item.label?.takeIf { it.isNotBlank() }
     Row(
         Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
             .background(Tokens.Surface, shape)
             .border(1.dp, Tokens.Line, shape)
-            .padding(horizontal = 14.dp, vertical = 13.dp),
+            .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Flag(item.from, 30.dp)
-        Column(Modifier.weight(1f)) {
-            Txt(
-                fmt(item.value, currency),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = Grotesk,
-                letterSpacing = NumSpacing,
-                color = Tokens.Ink,
-            )
-            Txt("aus " + fmt(item.raw, item.from), fontSize = 12.sp, color = Tokens.Ink2)
+        // Antippbarer Bereich → Position benennen/umbenennen (§3).
+        Row(
+            Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(11.dp))
+                .scaleClick(scale = 0.99f, onClick = onEdit)
+                .padding(horizontal = 8.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Flag(item.from, 30.dp)
+            if (name != null) {
+                Column(Modifier.weight(1f)) {
+                    Txt(
+                        name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Tokens.Ink,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Txt("aus " + fmt(item.raw, item.from), fontSize = 12.sp, color = Tokens.Ink2)
+                }
+                Txt(
+                    fmt(item.value, currency),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = Grotesk,
+                    letterSpacing = NumSpacing,
+                    color = Tokens.AccentDeep,
+                    maxLines = 1,
+                )
+            } else {
+                Column(Modifier.weight(1f)) {
+                    Txt(
+                        fmt(item.value, currency),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = Grotesk,
+                        letterSpacing = NumSpacing,
+                        color = Tokens.Ink,
+                    )
+                    Txt("aus " + fmt(item.raw, item.from), fontSize = 12.sp, color = Tokens.Ink2)
+                }
+            }
         }
         // Lösch-Button (.item-del): Pressed-Look danger-soft/danger
         val interaction = remember { MutableInteractionSource() }
