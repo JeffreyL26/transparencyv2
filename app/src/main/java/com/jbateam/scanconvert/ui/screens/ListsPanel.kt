@@ -1,6 +1,7 @@
 package com.jbateam.scanconvert.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -80,6 +81,9 @@ import com.jbateam.scanconvert.ui.theme.NumSpacing
 import com.jbateam.scanconvert.ui.theme.Tokens
 import com.jbateam.scanconvert.ui.theme.Txt
 import com.jbateam.scanconvert.ui.theme.motionTween
+import java.util.Locale
+import kotlin.math.PI
+import kotlin.math.sin
 
 /** shadow-card: rgba(30,40,28,0.26) */
 private val CardShadow = Color(0x421E281C)
@@ -98,6 +102,7 @@ fun ListsPanel(
     onClose: () -> Unit,
     onNew: () -> Unit,
     canCreateList: Boolean,
+    isAdFree: Boolean,
     onSettings: () -> Unit,
     onExport: (String) -> Unit,
     nativeAd: NativeAd?,
@@ -143,7 +148,16 @@ fun ListsPanel(
                     DetailHead(list = list, onSelect = onSelect, onEdit = onEdit, onExport = onExport, onClose = onClose)
                     DetailBody(list = list, onDeleteItem = onDeleteItem, onEditItem = onEditItem)
                 } else {
-                    OverviewHead(onSettings = onSettings, onClose = onClose)
+                    OverviewHead(onSettings = onSettings, onClose = onClose, isAdFree = isAdFree)
+                    // Prominenter, animierter Werbefrei-CTA direkt in „Meine Listen" (statt
+                    // nur dem unscheinbaren Zahnrad) — niedrigere Kaufschwelle. Öffnet das
+                    // Einstellungs-Menü mit Plänen, Käufe-Wiederherstellen und Datenschutz.
+                    if (!isAdFree) {
+                        AdFreeCtaButton(
+                            onClick = onSettings,
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp),
+                        )
+                    }
                     OverviewBody(
                         lists = lists,
                         onSelect = onSelect,
@@ -176,7 +190,7 @@ private fun HeadRow(content: @Composable RowScope.() -> Unit) {
 }
 
 @Composable
-private fun OverviewHead(onSettings: () -> Unit, onClose: () -> Unit) {
+private fun OverviewHead(onSettings: () -> Unit, onClose: () -> Unit, isAdFree: Boolean) {
     HeadRow {
         Column(Modifier.weight(1f)) {
             Txt(
@@ -192,8 +206,81 @@ private fun OverviewHead(onSettings: () -> Unit, onClose: () -> Unit) {
                 color = Tokens.Ink2,
             )
         }
-        IconBtn(IcGear, onClick = onSettings)
+        // Zahnrad nur für werbefreie Nutzer; sonst übernimmt der Werbefrei-CTA darunter
+        // den Einstellungs-Einstieg (öffnet dasselbe Menü).
+        if (isAdFree) IconBtn(IcGear, onClick = onSettings)
         IconBtn(IcClose, onClick = onClose)
+    }
+}
+
+/**
+ * Prominenter, animierter Werbefrei-CTA in der „Meine Listen"-Übersicht: breiter,
+ * accent-gefüllter Button, der pro Zyklus EINMAL kurz wackelt + aufleuchtet (sonst ruhig)
+ * — eine niedrigschwellige Einladung zum Freischalten. Öffnet das Einstellungs-Menü
+ * (Pläne, Käufe wiederherstellen, Datenschutz). `prefers-reduced-motion` /
+ * Animationsskala = 0 → statischer Glow ohne Wackeln (analog [LiveDot]).
+ */
+@Composable
+private fun AdFreeCtaButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val motionScale = LocalMotionScale.current
+    val envelope: Float
+    val wiggle: Float
+    if (motionScale > 0f) {
+        val transition = rememberInfiniteTransition(label = "adfreeCta")
+        val t by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween((4200 * motionScale).toInt().coerceAtLeast(1), easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+            label = "adfreeCta",
+        )
+        // Aktives Fenster = erste ~22 % des Zyklus, danach Ruhe bis zum nächsten Impuls.
+        val active = 0.22f
+        val a = (t / active).coerceIn(0f, 1f)
+        envelope = if (t < active) sin(a * PI).toFloat() else 0f
+        wiggle = if (t < active) sin(a * PI * 4f).toFloat() * envelope else 0f
+    } else {
+        envelope = 0.5f
+        wiggle = 0f
+    }
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                rotationZ = wiggle * 2f
+                val s = 1f + 0.02f * envelope
+                scaleX = s
+                scaleY = s
+            }
+            .shadow(
+                elevation = (6 + 12 * envelope).dp,
+                shape = shape,
+                ambientColor = Tokens.AccentGlow,
+                spotColor = Tokens.AccentGlow,
+            )
+            .clip(shape)
+            .background(Tokens.Accent)
+            .scaleClick(scale = 0.98f, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 15.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Txt(
+            stringResource(R.string.adfree_cta).uppercase(Locale.ROOT),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 0.04.em,
+            color = Color.White,
+        )
+        Txt(
+            stringResource(R.string.adfree_cta_sub),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White.copy(alpha = 0.85f),
+            modifier = Modifier.padding(top = 3.dp),
+        )
     }
 }
 

@@ -212,6 +212,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                 onClose = vm::closePanel,
                 onNew = { vm.requestCreateList(CreateMode.PANEL) },
                 canCreateList = canCreateList,
+                isAdFree = entitlements.adFree,
                 onSettings = vm::openSettings,
                 onExport = { id -> vm.exportList(id) },
                 // Native-Anzeige nur im kühlen Pfad und nie für werbefreie Nutzer (§5/§11).
