@@ -24,11 +24,11 @@ val admobNativeUnitId = adProp("ADMOB_NATIVE_UNIT_ID", "ca-app-pub-3940256099942
 val admobRewardedUnitId = adProp("ADMOB_REWARDED_UNIT_ID", "ca-app-pub-3940256099942544/5224354917")
 
 android {
-    namespace = "com.transparency.fxlens"
+    namespace = "com.jbateam.scanconvert"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.transparency.fxlens"
+        applicationId = "com.jbateam.scanconvert"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
