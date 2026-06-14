@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- CSV-Exporte liegen im Cache (§6.4). -->
+    <!-- PDF-Exporte liegen im Cache und werden per FileProvider geteilt (§6.4). -->
     <cache-path name="exports" path="exports/" />
 </paths>

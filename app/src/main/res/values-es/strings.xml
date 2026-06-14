@@ -37,7 +37,7 @@
     <string name="name_item_placeholder">p. ej. Hotel, Cena</string>
     <string name="no_list_in">Aún no hay ninguna lista en %1$s. Crea una para reunir precios en esta moneda.</string>
     <string name="new_list_for">Nueva lista de %1$s</string>
-    <string name="positions">%1$d posiciones</string>
+    <string name="positions">%1$d entradas</string>
 
     <!-- Nueva lista -->
     <string name="create_title">Nueva lista</string>
@@ -87,10 +87,10 @@
     <string name="lists_subtitle">Cuentas de viaje por moneda de destino</string>
     <string name="no_lists">Aún no hay listas</string>
     <string name="no_lists_hint">Escanea precios y reúnelos en una lista de tu moneda de destino, p. ej. tu presupuesto de viaje.</string>
-    <string name="positions_currency">%1$d posiciones · %2$s</string>
+    <string name="positions_currency">%1$d entradas · %2$s</string>
     <string name="new_list">Nueva lista</string>
     <string name="total">TOTAL</string>
-    <string name="positions_label">POSICIONES</string>
+    <string name="positions_label">ENTRADAS</string>
     <string name="no_items_hint">Aún no has añadido nada. Escanea un precio y toca „Añadir a la lista".</string>
 
     <!-- Barra de presupuesto -->
@@ -146,6 +146,7 @@
     <string name="lists_locked_hint">3/3 listas · Toca para desbloquear</string>
     <string name="ad_label">Anuncio</string>
     <string name="export_list">Exportar lista</string>
+    <string name="export_creating">Creando PDF …</string>
     <string name="export_failed">Error al exportar</string>
     <string name="restore_started">Restaurando compras …</string>
 </resources>

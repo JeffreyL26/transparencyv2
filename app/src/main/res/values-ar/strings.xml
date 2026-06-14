@@ -140,6 +140,7 @@
     <string name="lists_locked_hint">3/3 قوائم · انقر للفتح</string>
     <string name="ad_label">إعلان</string>
     <string name="export_list">تصدير القائمة</string>
+    <string name="export_creating">جارٍ إنشاء PDF …</string>
     <string name="export_failed">فشل التصدير</string>
     <string name="restore_started">جارٍ استعادة المشتريات …</string>
 </resources>

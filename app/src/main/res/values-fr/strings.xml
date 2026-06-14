@@ -37,7 +37,7 @@
     <string name="name_item_placeholder">ex. Hôtel, Dîner</string>
     <string name="no_list_in">Aucune liste en %1$s pour l\'instant. Crées-en une pour rassembler les prix dans cette devise.</string>
     <string name="new_list_for">Nouvelle liste %1$s</string>
-    <string name="positions">%1$d positions</string>
+    <string name="positions">%1$d entrées</string>
 
     <!-- Nouvelle liste -->
     <string name="create_title">Nouvelle liste</string>
@@ -87,10 +87,10 @@
     <string name="lists_subtitle">Notes de voyage par devise cible</string>
     <string name="no_lists">Pas encore de listes</string>
     <string name="no_lists_hint">Scanne des prix et rassemble-les dans une liste de ta devise cible — par exemple ton budget de voyage.</string>
-    <string name="positions_currency">%1$d positions · %2$s</string>
+    <string name="positions_currency">%1$d entrées · %2$s</string>
     <string name="new_list">Nouvelle liste</string>
     <string name="total">TOTAL</string>
-    <string name="positions_label">POSITIONS</string>
+    <string name="positions_label">ENTRÉES</string>
     <string name="no_items_hint">Rien d\'ajouté pour l\'instant. Scanne un prix et touche « Ajouter à la liste ».</string>
 
     <!-- Barre de budget -->
@@ -140,6 +140,7 @@
     <string name="lists_locked_hint">3/3 listes · Touchez pour débloquer</string>
     <string name="ad_label">Publicité</string>
     <string name="export_list">Exporter la liste</string>
+    <string name="export_creating">Création du PDF …</string>
     <string name="export_failed">Échec de l\'export</string>
     <string name="restore_started">Restauration des achats …</string>
 </resources>

@@ -37,7 +37,7 @@
     <string name="name_item_placeholder">e.g. Hotel, Dinner</string>
     <string name="no_list_in">No list in %1$s yet. Create one to collect prices in this currency.</string>
     <string name="new_list_for">New %1$s list</string>
-    <string name="positions">%1$d items</string>
+    <string name="positions">%1$d entries</string>
 
     <!-- New list -->
     <string name="create_title">New list</string>
@@ -87,10 +87,10 @@
     <string name="lists_subtitle">Travel tabs by target currency</string>
     <string name="no_lists">No lists yet</string>
     <string name="no_lists_hint">Scan prices and collect them in a list for your target currency — like your travel budget.</string>
-    <string name="positions_currency">%1$d items · %2$s</string>
+    <string name="positions_currency">%1$d entries · %2$s</string>
     <string name="new_list">New list</string>
     <string name="total">TOTAL</string>
-    <string name="positions_label">ITEMS</string>
+    <string name="positions_label">ENTRIES</string>
     <string name="no_items_hint">Nothing added yet. Scan a price and tap „Add to list".</string>
 
     <!-- Budget bar -->
@@ -146,6 +146,7 @@
     <string name="lists_locked_hint">3/3 lists · Tap to unlock</string>
     <string name="ad_label">Ad</string>
     <string name="export_list">Export list</string>
+    <string name="export_creating">Creating PDF …</string>
     <string name="export_failed">Export failed</string>
     <string name="restore_started">Restoring purchases …</string>
 </resources>

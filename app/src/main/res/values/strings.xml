@@ -37,7 +37,7 @@
     <string name="name_item_placeholder">z. B. Hotel, Abendessen</string>
     <string name="no_list_in">Noch keine Liste in %1$s. Lege eine an, um Preise in dieser Währung zu sammeln.</string>
     <string name="new_list_for">Neue %1$s-Liste</string>
-    <string name="positions">%1$d Positionen</string>
+    <string name="positions">%1$d Einträge</string>
 
     <!-- Neue Liste -->
     <string name="create_title">Neue Liste</string>
@@ -87,10 +87,10 @@
     <string name="lists_subtitle">Reise-Rechnungen je Zielwährung</string>
     <string name="no_lists">Noch keine Listen</string>
     <string name="no_lists_hint">Scanne Preise und sammle sie in einer Liste deiner Zielwährung — z. B. dein Reisebudget.</string>
-    <string name="positions_currency">%1$d Positionen · %2$s</string>
+    <string name="positions_currency">%1$d Einträge · %2$s</string>
     <string name="new_list">Neue Liste</string>
     <string name="total">GESAMT</string>
-    <string name="positions_label">POSITIONEN</string>
+    <string name="positions_label">EINTRÄGE</string>
     <string name="no_items_hint">Noch nichts hinzugefügt. Scanne einen Preis und tippe „Zu Liste hinzufügen".</string>
 
     <!-- Budget-Balken -->
@@ -148,6 +148,7 @@
 
     <!-- Export &amp; Toasts -->
     <string name="export_list">Liste exportieren</string>
+    <string name="export_creating">PDF wird erstellt …</string>
     <string name="export_failed">Export fehlgeschlagen</string>
     <string name="restore_started">Käufe werden wiederhergestellt …</string>
 

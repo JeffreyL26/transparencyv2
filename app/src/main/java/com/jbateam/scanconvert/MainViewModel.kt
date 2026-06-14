@@ -22,6 +22,8 @@ import com.jbateam.scanconvert.data.ads.AdsInitializer
 import com.jbateam.scanconvert.data.billing.Entitlements
 import com.jbateam.scanconvert.data.billing.PaywallContext
 import com.jbateam.scanconvert.data.billing.ProductInfo
+import com.jbateam.scanconvert.data.export.PdfExporter
+import com.jbateam.scanconvert.data.export.buildListExportHtml
 import com.google.android.gms.ads.nativead.NativeAd
 import com.jbateam.scanconvert.domain.CreateMode
 import com.jbateam.scanconvert.domain.ListItem
@@ -42,6 +44,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -541,55 +544,46 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun consumeShare() { pendingShare = null }
 
     /**
-     * Exportiert eine Liste als CSV und teilt sie (FileProvider). [force] = true
-     * umgeht das Gate (z. B. nach einem Rewarded-Unlock, §6/Phase 6).
+     * Exportiert eine Liste als A4-PDF (gerendert aus der HTML-Vorlage über eine
+     * Offscreen-WebView, [PdfExporter]) und teilt sie über den ACTION_SEND-Chooser —
+     * dort erscheinen WhatsApp, Mail, Samsung/Android-Notizen sowie „In Dateien
+     * speichern". [force] umgeht das Gate (z. B. nach einem Rewarded-Unlock, §6/Phase 6).
      */
     fun exportList(listId: String, force: Boolean = false) {
         if (!force && !entitlements.value.listExport) { openPaywall(PaywallContext.EXPORT); return }
         val list = lists.value.find { it.id == listId } ?: return
         viewModelScope.launch {
-            val intent = withContext(Dispatchers.IO) { buildExportIntent(list) }
-            if (intent != null) pendingShare = intent else showToast(str(R.string.export_failed))
+            showToast(str(R.string.export_creating))
+            val app = getApplication<Application>()
+            val file = withTimeoutOrNull(20_000) {
+                PdfExporter.renderListPdf(app, buildListExportHtml(list), exportPdfFile(app, list))
+            }
+            if (file != null) pendingShare = pdfShareIntent(app, file, list.name)
+            else showToast(str(R.string.export_failed))
         }
     }
 
-    private fun buildExportIntent(list: TravelList): Intent? = runCatching {
-        val app = getApplication<Application>()
-        val df = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
-        val sb = StringBuilder()
-        sb.append("Name,From,Amount,Converted,Currency,Date\n")
-        list.items.forEach { item ->
-            sb.append(csvCell(item.label ?: "")).append(',')
-                .append(csvCell(item.from)).append(',')
-                .append(csvNum(item.raw)).append(',')
-                .append(csvNum(item.value)).append(',')
-                .append(csvCell(list.currency)).append(',')
-                .append(csvCell(df.format(Date(item.ts)))).append('\n')
-        }
-        sb.append('\n')
-        sb.append("Total,").append(csvNum(list.total())).append(',').append(csvCell(list.currency)).append('\n')
-        list.budget?.let { b ->
-            sb.append("Budget,").append(csvNum(b)).append(',').append(csvCell(list.currency)).append('\n')
-            sb.append("Remaining,").append(csvNum(b - list.total())).append(',').append(csvCell(list.currency)).append('\n')
-        }
+    /** Zieldatei im Cache: `{Listenname}_{yyyy-MM-dd}.pdf` (FS-unsichere Zeichen ersetzt). */
+    private fun exportPdfFile(app: Application, list: TravelList): File {
         val dir = File(app.cacheDir, "exports").apply { mkdirs() }
-        val safe = list.name.replace(Regex("[^A-Za-z0-9-_]"), "_").take(40).ifBlank { "list" }
-        val file = File(dir, "$safe.csv")
-        file.writeText(sb.toString())
-        val uri: Uri = FileProvider.getUriForFile(app, app.packageName + ".fileprovider", file)
-        Intent(Intent.ACTION_SEND).apply {
-            type = "text/csv"
+        val safe = list.name.trim()
+            .replace(Regex("[\\\\/:*?\"<>|]+"), "_")
+            .replace(Regex("\\s+"), "_")
+            .take(40)
+            .ifBlank { "Liste" }
+        val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        return File(dir, "${safe}_$date.pdf")
+    }
+
+    private fun pdfShareIntent(app: Application, file: File, title: String): Intent {
+        val uri = FileProvider.getUriForFile(app, app.packageName + ".fileprovider", file)
+        return Intent(Intent.ACTION_SEND).apply {
+            type = "application/pdf"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, list.name)
+            putExtra(Intent.EXTRA_SUBJECT, title)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-    }.getOrNull()
-
-    /** CSV-Feld escapen (RFC 4180: Quote bei , " oder Zeilenumbruch). */
-    private fun csvCell(s: String): String =
-        if (s.any { it == ',' || it == '"' || it == '\n' }) "\"" + s.replace("\"", "\"\"") + "\"" else s
-
-    private fun csvNum(v: Double): String = String.format(Locale.US, "%.2f", v)
+    }
 
     // ---------- Toast (Screen 8) ----------
     /** Lokalisierter String über einen Context mit der gewählten App-Sprache (§F5). */
