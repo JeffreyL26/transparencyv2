@@ -136,7 +136,7 @@
     <string name="settings_privacy_policy">プライバシーポリシー</string>
     <string name="settings_terms">利用規約</string>
     <string name="adfree_cta">広告を削除</string>
-    <string name="adfree_cta_sub">広告はもう表示されません – 買い切り。</string>
+    <string name="adfree_cta_sub">休暇パス、リストの書き出しなど</string>
     <string name="lists_locked_hint">3/3 リスト · タップでアンロック</string>
     <string name="ad_label">広告</string>
     <string name="export_list">リストをエクスポート</string>

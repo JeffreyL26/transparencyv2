@@ -140,7 +140,7 @@
     <string name="settings_privacy_policy">Política de privacidad</string>
     <string name="settings_terms">Condiciones de uso</string>
     <string name="adfree_cta">Quitar anuncios</string>
-    <string name="adfree_cta_sub">Sin más anuncios: compra única.</string>
+    <string name="adfree_cta_sub">Pase de vacaciones, exportar listas y más</string>
 
     <!-- Listas bloqueadas / Anuncios / Exportación -->
     <string name="lists_locked_hint">3/3 listas · Toca para desbloquear</string>
