@@ -1,5 +1,8 @@
 package com.transparency.fxlens.ui
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +12,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,10 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.transparency.fxlens.MainViewModel
+import com.transparency.fxlens.R
 import com.transparency.fxlens.data.LocaleStore
+import com.transparency.fxlens.data.billing.PaywallContext
 import com.transparency.fxlens.domain.CreateMode
 import com.transparency.fxlens.domain.ScanPhase
 import com.transparency.fxlens.scan.CameraScanPreview
@@ -40,8 +47,10 @@ import com.transparency.fxlens.ui.screens.LanguageButton
 import com.transparency.fxlens.ui.screens.LanguageSheet
 import com.transparency.fxlens.ui.screens.ListsPanel
 import com.transparency.fxlens.ui.screens.OnboardingScreen
+import com.transparency.fxlens.ui.screens.PaywallSheet
 import com.transparency.fxlens.ui.screens.PickerSheet
 import com.transparency.fxlens.ui.screens.ScanLayer
+import com.transparency.fxlens.ui.screens.SettingsSheet
 import com.transparency.fxlens.ui.theme.FxTheme
 
 /**
@@ -59,9 +68,30 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
     val customs by vm.customs.collectAsState()
     val allCodes by vm.allCodes.collectAsState()
     val onboarded by vm.onboarded.collectAsState()
+    val entitlements by vm.entitlements.collectAsState()
+    val canCreateList by vm.canCreateList.collectAsState()
+    val products by vm.products.collectAsState()
+    val nativeAd by vm.nativeAd.collectAsState()
+
+    val context = LocalContext.current
+    val activity = context as? Activity
 
     var langOpen by remember { mutableStateOf(false) }
-    val overlayOpen = vm.picker != null || vm.addOpen || vm.creating != null || vm.panelOpen || vm.customOpen || langOpen
+    val overlayOpen = vm.picker != null || vm.addOpen || vm.creating != null || vm.panelOpen ||
+        vm.customOpen || langOpen || vm.paywallOpen != null || vm.settingsOpen
+
+    // Fertiger CSV-Export: Teilen-Dialog starten, dann State leeren (§6.4).
+    val shareIntent = vm.pendingShare
+    LaunchedEffect(shareIntent) {
+        if (shareIntent != null) {
+            runCatching {
+                context.startActivity(
+                    Intent.createChooser(shareIntent, context.getString(R.string.export_list))
+                )
+            }
+            vm.consumeShare()
+        }
+    }
 
     // Status-Bar-Icons: hell über Kamera, dunkel über hellen Vollbild-Schichten.
     val view = LocalView.current
@@ -168,7 +198,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                     rates = rates.rates,
                     lists = lists.filter { it.currency == vm.to },
                     onAdd = { id, label -> vm.addToExisting(id, label) },
-                    onNew = { label -> vm.startCreate(CreateMode.ADD, label) },
+                    onNew = { label -> vm.requestCreateList(CreateMode.ADD, label) },
                     onClose = vm::closeAdd,
                 )
             }
@@ -180,7 +210,12 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                 selectedId = vm.selectedListId,
                 onSelect = vm::selectList,
                 onClose = vm::closePanel,
-                onNew = { vm.startCreate(CreateMode.PANEL) },
+                onNew = { vm.requestCreateList(CreateMode.PANEL) },
+                canCreateList = canCreateList,
+                onSettings = vm::openSettings,
+                onExport = { id -> vm.exportList(id) },
+                // Native-Anzeige nur im kühlen Pfad und nie für werbefreie Nutzer (§5/§11).
+                nativeAd = if (entitlements.adFree) null else nativeAd,
                 onEdit = vm::startEdit,
                 onDeleteItem = vm::deleteItem,
                 onEditItem = vm::startEditItem,
@@ -230,6 +265,32 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                 }
             }
 
+            // Einstellungen (§7.2, über dem Panel)
+            if (vm.settingsOpen) {
+                SettingsSheet(
+                    isAdFree = entitlements.adFree,
+                    privacyOptionsRequired = vm.privacyOptionsRequired,
+                    onUpgrade = { vm.closeSettings(); vm.openPaywall(PaywallContext.GENERIC) },
+                    onRestore = vm::restorePurchases,
+                    onPrivacyOptions = { activity?.let { vm.showPrivacyOptions(it) } },
+                    onLanguage = { vm.closeSettings(); langOpen = true },
+                    onPrivacyPolicy = { openUrl(context, context.getString(R.string.privacy_url)) },
+                    onTerms = { openUrl(context, context.getString(R.string.terms_url)) },
+                    onClose = vm::closeSettings,
+                )
+            }
+
+            // Paywall (§7.1, oberste Schicht im Listen-Bereich)
+            vm.paywallOpen?.let { ctx ->
+                PaywallSheet(
+                    context = ctx,
+                    products = products,
+                    onBuy = { id -> activity?.let { vm.purchase(it, id) } },
+                    onRestore = vm::restorePurchases,
+                    onClose = vm::closePaywall,
+                )
+            }
+
             // Sprachauswahl (§F5, über Panel/Sheets)
             if (langOpen) {
                 val ctx = LocalContext.current
@@ -256,4 +317,9 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
             )
         }
     }
+}
+
+/** Öffnet eine URL extern (Datenschutz/Nutzungsbedingungen, §7.2). */
+private fun openUrl(context: android.content.Context, url: String) {
+    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
 }

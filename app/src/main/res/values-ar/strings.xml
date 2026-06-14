@@ -110,4 +110,34 @@
     <string name="lang_pt">البرتغالية</string>
     <string name="lang_ar">العربية</string>
     <string name="lang_ja">اليابانية</string>
+
+    <!-- Paywall / Monetarisierung -->
+    <string name="paywall_eyebrow">بريميوم</string>
+    <string name="paywall_title_lists">افتح المزيد من القوائم</string>
+    <string name="paywall_title_export">تصدير القوائم</string>
+    <string name="paywall_title_generic">افتح ScanConvert</string>
+    <string name="paywall_subtitle">اشترِ مرة واحدة واحتفظ بها للأبد. بدون اشتراكات.</string>
+    <string name="paywall_popular">الخيار الأكثر شعبية</string>
+    <string name="paywall_price_loading">…</string>
+    <string name="restore_purchases">استعادة المشتريات</string>
+    <string name="product_adfree_name">بدون إعلانات</string>
+    <string name="product_adfree_desc">يزيل جميع الإعلانات نهائياً.</string>
+    <string name="product_vacation_name">تصريح إجازة 7 أيام</string>
+    <string name="product_vacation_desc">أسبوع بدون إعلانات – مثالي للرحلات.</string>
+    <string name="product_business_name">حزمة الأعمال</string>
+    <string name="product_business_desc">قوائم غير محدودة وتصدير CSV.</string>
+    <string name="product_full_name">Full Premium</string>
+    <string name="product_full_desc">بدون إعلانات، قوائم غير محدودة وتصدير – كل شيء مشمول.</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_upgrade">بريميوم / إزالة الإعلانات</string>
+    <string name="settings_upgrade_sub">المزيد من القوائم، التصدير وبدون إعلانات.</string>
+    <string name="settings_language">اللغة</string>
+    <string name="privacy_options">إعدادات الخصوصية</string>
+    <string name="settings_privacy_policy">سياسة الخصوصية</string>
+    <string name="settings_terms">شروط الاستخدام</string>
+    <string name="lists_locked_hint">3/3 قوائم · انقر للفتح</string>
+    <string name="ad_label">إعلان</string>
+    <string name="export_list">تصدير القائمة</string>
+    <string name="export_failed">فشل التصدير</string>
+    <string name="restore_started">جارٍ استعادة المشتريات …</string>
 </resources>

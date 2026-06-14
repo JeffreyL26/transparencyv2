@@ -17,8 +17,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.transparency.fxlens.data.LocaleStore
 import com.transparency.fxlens.ui.AppRoot
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -32,6 +34,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Consent einmal pro frischem Start (§8.3) — nicht bei Recreate (z. B.
+        // Sprachwechsel), sonst würde der Session-Zähler hochlaufen und das Formular
+        // erneut erscheinen. Danach lädt das VM Ads NUR, wenn erlaubt, nicht werbefrei
+        // und nicht in der ersten Session (§5/§11).
+        if (savedInstanceState == null) {
+            val container = (application as FxLensApp).container
+            lifecycleScope.launch {
+                val launchNo = container.prefs.incrementLaunchCount()
+                container.consentManager.gatherConsent(this@MainActivity) { canRequestAds ->
+                    vm.onConsentResolved(canRequestAds, firstSession = launchNo == 1)
+                }
+            }
+        }
+
         setContent {
             var hasCamera by remember {
                 mutableStateOf(

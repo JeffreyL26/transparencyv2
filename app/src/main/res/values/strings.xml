@@ -110,4 +110,46 @@
     <string name="lang_pt">Portugiesisch</string>
     <string name="lang_ar">Arabisch</string>
     <string name="lang_ja">Japanisch</string>
+
+    <!-- Monetarisierung: Paywall -->
+    <string name="paywall_eyebrow">Premium</string>
+    <string name="paywall_title_lists">Mehr Listen freischalten</string>
+    <string name="paywall_title_export">Listen exportieren</string>
+    <string name="paywall_title_generic">ScanConvert freischalten</string>
+    <string name="paywall_subtitle">Einmal kaufen, dauerhaft behalten. Keine Abos.</string>
+    <string name="paywall_popular">Beliebteste Wahl</string>
+    <string name="paywall_price_loading">…</string>
+    <string name="restore_purchases">Käufe wiederherstellen</string>
+
+    <!-- Produkte (Namen/Beschreibungen; Preise kommen aus Google Play) -->
+    <string name="product_adfree_name">Werbefrei</string>
+    <string name="product_adfree_desc">Entfernt dauerhaft alle Anzeigen.</string>
+    <string name="product_vacation_name">7-Tage-Urlaubspass</string>
+    <string name="product_vacation_desc">Eine Woche werbefrei – ideal für eine Reise.</string>
+    <string name="product_business_name">Business-Paket</string>
+    <string name="product_business_desc">Unbegrenzte Listen und CSV-Export.</string>
+    <string name="product_full_name">Full Premium</string>
+    <string name="product_full_desc">Werbefrei, unbegrenzte Listen und Export – alles dabei.</string>
+
+    <!-- Einstellungen -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_upgrade">Premium / Werbung entfernen</string>
+    <string name="settings_upgrade_sub">Mehr Listen, Export und werbefrei.</string>
+    <string name="settings_language">Sprache</string>
+    <string name="privacy_options">Datenschutzeinstellungen</string>
+    <string name="settings_privacy_policy">Datenschutzerklärung</string>
+    <string name="settings_terms">Nutzungsbedingungen</string>
+
+    <!-- Listen-Limit &amp; Werbung -->
+    <string name="lists_locked_hint">3/3 Listen · Tippen zum Freischalten</string>
+    <string name="ad_label">Anzeige</string>
+
+    <!-- Export &amp; Toasts -->
+    <string name="export_list">Liste exportieren</string>
+    <string name="export_failed">Export fehlgeschlagen</string>
+    <string name="restore_started">Käufe werden wiederhergestellt …</string>
+
+    <!-- Rechtliche Links (Platzhalter – vor Release ersetzen) -->
+    <string name="privacy_url" translatable="false">https://example.com/privacy</string>
+    <string name="terms_url" translatable="false">https://example.com/terms</string>
 </resources>

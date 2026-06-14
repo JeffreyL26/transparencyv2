@@ -235,6 +235,52 @@ private fun ImageVector.Builder.pinBody(filled: Boolean) {
     }
 }
 
+/** Zahnrad (Einstellungen): Nabe + 8 Speichen (1.8). */
+val IcGear: ImageVector by lazy {
+    builder("IcGear").apply {
+        strokePath(1.8f) {
+            circle(12f, 12f, 3.2f)
+        }
+        strokePath(1.8f) {
+            moveTo(12f, 3f); verticalLineTo(5.2f)
+            moveTo(12f, 18.8f); verticalLineTo(21f)
+            moveTo(3f, 12f); horizontalLineTo(5.2f)
+            moveTo(18.8f, 12f); horizontalLineTo(21f)
+            moveTo(5.6f, 5.6f); lineTo(7.1f, 7.1f)
+            moveTo(16.9f, 16.9f); lineTo(18.4f, 18.4f)
+            moveTo(18.4f, 5.6f); lineTo(16.9f, 7.1f)
+            moveTo(7.1f, 16.9f); lineTo(5.6f, 18.4f)
+        }
+    }.build()
+}
+
+/** Schloss (gesperrt): Bügel + Korpus (1.9). */
+val IcLock: ImageVector by lazy {
+    builder("IcLock").apply {
+        strokePath(1.9f) {
+            // Bügel
+            moveTo(8f, 10f); verticalLineTo(7.5f)
+            arcToRelative(4f, 4f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = 8f, dy1 = 0f)
+            verticalLineTo(10f)
+        }
+        strokePath(1.9f) {
+            // Korpus
+            moveTo(6.5f, 10f); horizontalLineTo(17.5f); verticalLineTo(19f); horizontalLineTo(6.5f); close()
+        }
+    }.build()
+}
+
+/** Teilen/Export: Pfeil nach oben aus einer Ablage (1.9). */
+val IcShare: ImageVector by lazy {
+    builder("IcShare").apply {
+        strokePath(1.9f) {
+            moveTo(12f, 15f); verticalLineTo(4f)
+            moveTo(8.5f, 7.5f); lineTo(12f, 4f); lineTo(15.5f, 7.5f)
+            moveTo(5f, 12f); verticalLineTo(19f); horizontalLineTo(19f); verticalLineTo(12f)
+        }
+    }.build()
+}
+
 /** Pin, Umriss */
 val IcPin: ImageVector by lazy {
     builder("IcPin").apply { pinBody(filled = false) }.build()

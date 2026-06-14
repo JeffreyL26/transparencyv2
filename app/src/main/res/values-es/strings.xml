@@ -110,4 +110,40 @@
     <string name="lang_pt">Portugués</string>
     <string name="lang_ar">Árabe</string>
     <string name="lang_ja">Japonés</string>
+
+    <!-- Premium / Paywall -->
+    <string name="paywall_eyebrow">Premium</string>
+    <string name="paywall_title_lists">Desbloquea más listas</string>
+    <string name="paywall_title_export">Exporta tus listas</string>
+    <string name="paywall_title_generic">Desbloquea ScanConvert</string>
+    <string name="paywall_subtitle">Paga una vez y consérvalo para siempre. Sin suscripciones.</string>
+    <string name="paywall_popular">Opción más popular</string>
+    <string name="paywall_price_loading">…</string>
+    <string name="restore_purchases">Restaurar compras</string>
+
+    <!-- Productos -->
+    <string name="product_adfree_name">Sin anuncios</string>
+    <string name="product_adfree_desc">Elimina todos los anuncios de forma permanente.</string>
+    <string name="product_vacation_name">Pase de vacaciones de 7 días</string>
+    <string name="product_vacation_desc">Una semana sin anuncios, ideal para un viaje.</string>
+    <string name="product_business_name">Paquete Business</string>
+    <string name="product_business_desc">Listas ilimitadas y exportación CSV.</string>
+    <string name="product_full_name">Full Premium</string>
+    <string name="product_full_desc">Sin anuncios, listas ilimitadas y exportación: todo incluido.</string>
+
+    <!-- Ajustes -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_upgrade">Premium / Quitar anuncios</string>
+    <string name="settings_upgrade_sub">Más listas, exportación y sin anuncios.</string>
+    <string name="settings_language">Idioma</string>
+    <string name="privacy_options">Configuración de privacidad</string>
+    <string name="settings_privacy_policy">Política de privacidad</string>
+    <string name="settings_terms">Condiciones de uso</string>
+
+    <!-- Listas bloqueadas / Anuncios / Exportación -->
+    <string name="lists_locked_hint">3/3 listas · Toca para desbloquear</string>
+    <string name="ad_label">Anuncio</string>
+    <string name="export_list">Exportar lista</string>
+    <string name="export_failed">Error al exportar</string>
+    <string name="restore_started">Restaurando compras …</string>
 </resources>

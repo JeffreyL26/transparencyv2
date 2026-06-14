@@ -1,26 +1,37 @@
 package com.transparency.fxlens
 
+import android.app.Activity
 import android.app.Application
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.data.CustomCurrency
 import com.transparency.fxlens.data.FxRates
 import com.transparency.fxlens.data.LocaleStore
+import com.transparency.fxlens.data.ads.AdsInitializer
+import com.transparency.fxlens.data.billing.Entitlements
+import com.transparency.fxlens.data.billing.PaywallContext
+import com.transparency.fxlens.data.billing.ProductInfo
+import com.google.android.gms.ads.nativead.NativeAd
 import com.transparency.fxlens.domain.CreateMode
 import com.transparency.fxlens.domain.ListItem
 import com.transparency.fxlens.domain.PickerSlot
 import com.transparency.fxlens.domain.ScanPhase
 import com.transparency.fxlens.domain.TravelList
 import com.transparency.fxlens.domain.convert
+import com.transparency.fxlens.domain.total
 import com.transparency.fxlens.scan.Detection
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +41,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 /** Anfrage für das „Neue Liste“-Sheet; `itemLabel` benennt die erste Position (ADD-Flow). */
@@ -45,6 +61,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val prefs = container.prefs
     private val listsRepo = container.listsRepository
     private val ratesRepo = container.ratesRepository
+    private val billingRepo = container.billingRepository
 
     // ---------- persistenter State ----------
     /** Vom Nutzer angelegte Custom-Währungen (§F2). */
@@ -80,6 +97,76 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val lists: StateFlow<List<TravelList>> = listsRepo.observeLists()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    // ---------- Monetarisierung (§2/§6.3) ----------
+    /** Abgeleitete Entitlements (Source of Truth = Play, Cache = sofortige UX). */
+    val entitlements: StateFlow<Entitlements> = billingRepo.entitlements
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Entitlements())
+
+    /** Produkte inkl. von Google geliefertem `formattedPrice` (nie hartkodiert, §11). */
+    val products: StateFlow<List<ProductInfo>> = billingRepo.products
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Free: max. 3 Listen; mit unlimitedLists unbegrenzt (§4). */
+    val canCreateList: StateFlow<Boolean> =
+        combine(lists, entitlements) { ls, e -> e.unlimitedLists || ls.size < Entitlements.FREE_LIST_LIMIT }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    /** Offener Paywall-Kontext (null = geschlossen). */
+    var paywallOpen by mutableStateOf<PaywallContext?>(null)
+        private set
+    /** Offenes Einstellungen-Sheet. */
+    var settingsOpen by mutableStateOf(false)
+        private set
+
+    fun openPaywall(ctx: PaywallContext) { paywallOpen = ctx }
+    fun closePaywall() { paywallOpen = null }
+    fun openSettings() { settingsOpen = true }
+    fun closeSettings() { settingsOpen = false }
+
+    fun purchase(activity: Activity, productId: String) = billingRepo.launchPurchase(activity, productId)
+    fun restorePurchases() {
+        viewModelScope.launch { billingRepo.restore() }
+        showToast(str(R.string.restore_started))
+    }
+
+    // ---------- Werbung & Consent (§5/§8/§11) ----------
+    /** Aktuell geladene Native-Ad (oder null) — die UI rendert nur, wenn !adFree. */
+    val nativeAd: StateFlow<NativeAd?> = container.nativeAdLoader.nativeAd
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** UMP verlangt einen Privacy-Options-Eintrag im SettingsSheet (nach Consent gesetzt). */
+    var privacyOptionsRequired by mutableStateOf(false)
+        private set
+
+    /**
+     * Wird von [MainActivity] nach dem Consent-Flow aufgerufen. Lädt Ads NUR, wenn
+     * Consent erlaubt, der Nutzer nicht werbefrei ist und es nicht die erste Session
+     * ist (§5/§11). Sonst passiert nichts (kein SDK-Init, kein Ad-Load).
+     */
+    fun onConsentResolved(canRequestAds: Boolean, firstSession: Boolean) {
+        privacyOptionsRequired = container.consentManager.isPrivacyOptionsRequired
+        if (!canRequestAds || entitlements.value.adFree || firstSession) return
+        val app = getApplication<Application>()
+        AdsInitializer.ensureInitialized(app, viewModelScope) {
+            container.nativeAdLoader.load()
+            container.rewardedAdManager.load()
+        }
+    }
+
+    fun showPrivacyOptions(activity: Activity) = container.consentManager.showPrivacyOptions(activity)
+
+    /** Rewarded als Gratis-Alternative zum Export-Kauf (§5/Phase 6). */
+    fun watchAdToExport(activity: Activity, listId: String) {
+        container.rewardedAdManager.show(activity) { exportList(listId, force = true) }
+    }
+
+    init {
+        // adFree gekauft → laufende Native-Ad verwerfen, nichts mehr laden (§11).
+        viewModelScope.launch {
+            entitlements.collect { e -> if (e.adFree) container.nativeAdLoader.clear() }
+        }
+    }
 
     // ---------- Session-State (nicht persistent, §7) ----------
     var from by mutableStateOf("EUR")
@@ -340,6 +427,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         creating = CreateRequest(mode, to, itemLabel?.trim()?.takeIf { it.isNotEmpty() })
     }
 
+    /**
+     * Gegateter Einstieg ins „Neue Liste"-Sheet (§4): bei erreichtem Free-Limit
+     * öffnet ein Tap die Paywall statt das Create-Sheet. Gilt an BEIDEN
+     * Anlage-Pfaden (Panel + Add-Flow).
+     */
+    fun requestCreateList(mode: CreateMode, itemLabel: String? = null) {
+        if (!canCreateList.value) { openPaywall(PaywallContext.LISTS); return }
+        startCreate(mode, itemLabel)
+    }
+
     fun cancelCreate() {
         creating = null
     }
@@ -435,6 +532,64 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteItem(listId: String, itemId: String) {
         viewModelScope.launch { listsRepo.deleteItem(itemId) }
     }
+
+    // ---------- Export (§6.4, hinter listExport) ----------
+    /** Fertiger Teilen-Intent, den die UI per Activity-Context startet (null = keiner). */
+    var pendingShare by mutableStateOf<Intent?>(null)
+        private set
+
+    fun consumeShare() { pendingShare = null }
+
+    /**
+     * Exportiert eine Liste als CSV und teilt sie (FileProvider). [force] = true
+     * umgeht das Gate (z. B. nach einem Rewarded-Unlock, §6/Phase 6).
+     */
+    fun exportList(listId: String, force: Boolean = false) {
+        if (!force && !entitlements.value.listExport) { openPaywall(PaywallContext.EXPORT); return }
+        val list = lists.value.find { it.id == listId } ?: return
+        viewModelScope.launch {
+            val intent = withContext(Dispatchers.IO) { buildExportIntent(list) }
+            if (intent != null) pendingShare = intent else showToast(str(R.string.export_failed))
+        }
+    }
+
+    private fun buildExportIntent(list: TravelList): Intent? = runCatching {
+        val app = getApplication<Application>()
+        val df = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+        val sb = StringBuilder()
+        sb.append("Name,From,Amount,Converted,Currency,Date\n")
+        list.items.forEach { item ->
+            sb.append(csvCell(item.label ?: "")).append(',')
+                .append(csvCell(item.from)).append(',')
+                .append(csvNum(item.raw)).append(',')
+                .append(csvNum(item.value)).append(',')
+                .append(csvCell(list.currency)).append(',')
+                .append(csvCell(df.format(Date(item.ts)))).append('\n')
+        }
+        sb.append('\n')
+        sb.append("Total,").append(csvNum(list.total())).append(',').append(csvCell(list.currency)).append('\n')
+        list.budget?.let { b ->
+            sb.append("Budget,").append(csvNum(b)).append(',').append(csvCell(list.currency)).append('\n')
+            sb.append("Remaining,").append(csvNum(b - list.total())).append(',').append(csvCell(list.currency)).append('\n')
+        }
+        val dir = File(app.cacheDir, "exports").apply { mkdirs() }
+        val safe = list.name.replace(Regex("[^A-Za-z0-9-_]"), "_").take(40).ifBlank { "list" }
+        val file = File(dir, "$safe.csv")
+        file.writeText(sb.toString())
+        val uri: Uri = FileProvider.getUriForFile(app, app.packageName + ".fileprovider", file)
+        Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, list.name)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }.getOrNull()
+
+    /** CSV-Feld escapen (RFC 4180: Quote bei , " oder Zeilenumbruch). */
+    private fun csvCell(s: String): String =
+        if (s.any { it == ',' || it == '"' || it == '\n' }) "\"" + s.replace("\"", "\"\"") + "\"" else s
+
+    private fun csvNum(v: Double): String = String.format(Locale.US, "%.2f", v)
 
     // ---------- Toast (Screen 8) ----------
     /** Lokalisierter String über einen Context mit der gewählten App-Sprache (§F5). */

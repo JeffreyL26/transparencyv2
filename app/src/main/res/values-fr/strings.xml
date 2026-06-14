@@ -110,4 +110,34 @@
     <string name="lang_pt">Portugais</string>
     <string name="lang_ar">Arabe</string>
     <string name="lang_ja">Japonais</string>
+
+    <!-- Premium / Paywall -->
+    <string name="paywall_eyebrow">Premium</string>
+    <string name="paywall_title_lists">Débloquer plus de listes</string>
+    <string name="paywall_title_export">Exporter des listes</string>
+    <string name="paywall_title_generic">Débloquer ScanConvert</string>
+    <string name="paywall_subtitle">Payez une fois, gardez pour toujours. Sans abonnement.</string>
+    <string name="paywall_popular">Choix le plus populaire</string>
+    <string name="paywall_price_loading">…</string>
+    <string name="restore_purchases">Restaurer les achats</string>
+    <string name="product_adfree_name">Sans publicité</string>
+    <string name="product_adfree_desc">Supprime définitivement toutes les publicités.</string>
+    <string name="product_vacation_name">Pass vacances 7 jours</string>
+    <string name="product_vacation_desc">Une semaine sans publicité – idéal pour un voyage.</string>
+    <string name="product_business_name">Pack Business</string>
+    <string name="product_business_desc">Listes illimitées et export CSV.</string>
+    <string name="product_full_name">Full Premium</string>
+    <string name="product_full_desc">Sans publicité, listes illimitées et export – tout est inclus.</string>
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_upgrade">Premium / Supprimer les publicités</string>
+    <string name="settings_upgrade_sub">Plus de listes, export et sans publicité.</string>
+    <string name="settings_language">Langue</string>
+    <string name="privacy_options">Paramètres de confidentialité</string>
+    <string name="settings_privacy_policy">Politique de confidentialité</string>
+    <string name="settings_terms">Conditions d\'utilisation</string>
+    <string name="lists_locked_hint">3/3 listes · Touchez pour débloquer</string>
+    <string name="ad_label">Publicité</string>
+    <string name="export_list">Exporter la liste</string>
+    <string name="export_failed">Échec de l\'export</string>
+    <string name="restore_started">Restauration des achats …</string>
 </resources>

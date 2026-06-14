@@ -1,7 +1,12 @@
 package com.transparency.fxlens.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.ads.nativead.NativeAd
 import com.transparency.fxlens.R
 import com.transparency.fxlens.data.CurrencyMeta
 import com.transparency.fxlens.domain.ListItem
@@ -58,12 +64,17 @@ import com.transparency.fxlens.ui.components.IcBack
 import com.transparency.fxlens.ui.components.IcChevron
 import com.transparency.fxlens.ui.components.IcClose
 import com.transparency.fxlens.ui.components.IcEdit
+import com.transparency.fxlens.ui.components.IcGear
 import com.transparency.fxlens.ui.components.IcList
+import com.transparency.fxlens.ui.components.IcLock
 import com.transparency.fxlens.ui.components.IcPlus
+import com.transparency.fxlens.ui.components.IcShare
 import com.transparency.fxlens.ui.components.IcTrash
 import com.transparency.fxlens.ui.components.IconBtn
+import com.transparency.fxlens.ui.components.NativeAdCard
 import com.transparency.fxlens.ui.components.scaleClick
 import com.transparency.fxlens.ui.theme.Grotesk
+import com.transparency.fxlens.ui.theme.LocalMotionScale
 import com.transparency.fxlens.ui.theme.Motion
 import com.transparency.fxlens.ui.theme.NumSpacing
 import com.transparency.fxlens.ui.theme.Tokens
@@ -86,6 +97,10 @@ fun ListsPanel(
     onSelect: (String?) -> Unit,
     onClose: () -> Unit,
     onNew: () -> Unit,
+    canCreateList: Boolean,
+    onSettings: () -> Unit,
+    onExport: (String) -> Unit,
+    nativeAd: NativeAd?,
     onEdit: (String) -> Unit,
     onDeleteItem: (listId: String, itemId: String) -> Unit,
     onEditItem: (listId: String, itemId: String) -> Unit,
@@ -125,11 +140,17 @@ fun ListsPanel(
                     .clickable(interactionSource = bgInteraction, indication = null, onClick = {})
             ) {
                 if (list != null) {
-                    DetailHead(list = list, onSelect = onSelect, onEdit = onEdit, onClose = onClose)
+                    DetailHead(list = list, onSelect = onSelect, onEdit = onEdit, onExport = onExport, onClose = onClose)
                     DetailBody(list = list, onDeleteItem = onDeleteItem, onEditItem = onEditItem)
                 } else {
-                    OverviewHead(onClose = onClose)
-                    OverviewBody(lists = lists, onSelect = onSelect, onNew = onNew)
+                    OverviewHead(onSettings = onSettings, onClose = onClose)
+                    OverviewBody(
+                        lists = lists,
+                        onSelect = onSelect,
+                        onNew = onNew,
+                        canCreateList = canCreateList,
+                        nativeAd = nativeAd,
+                    )
                 }
             }
         }
@@ -155,7 +176,7 @@ private fun HeadRow(content: @Composable RowScope.() -> Unit) {
 }
 
 @Composable
-private fun OverviewHead(onClose: () -> Unit) {
+private fun OverviewHead(onSettings: () -> Unit, onClose: () -> Unit) {
     HeadRow {
         Column(Modifier.weight(1f)) {
             Txt(
@@ -171,6 +192,7 @@ private fun OverviewHead(onClose: () -> Unit) {
                 color = Tokens.Ink2,
             )
         }
+        IconBtn(IcGear, onClick = onSettings)
         IconBtn(IcClose, onClick = onClose)
     }
 }
@@ -180,6 +202,7 @@ private fun DetailHead(
     list: TravelList,
     onSelect: (String?) -> Unit,
     onEdit: (String) -> Unit,
+    onExport: (String) -> Unit,
     onClose: () -> Unit,
 ) {
     HeadRow {
@@ -201,6 +224,8 @@ private fun DetailHead(
                 color = Tokens.Ink2,
             )
         }
+        // Export self-gated: ohne listExport öffnet der Tap die Paywall (§6.4).
+        IconBtn(IcShare, onClick = { onExport(list.id) })
         IconBtn(IcEdit, onClick = { onEdit(list.id) })
         IconBtn(IcClose, onClick = onClose)
     }
@@ -213,7 +238,12 @@ private fun ColumnScope.OverviewBody(
     lists: List<TravelList>,
     onSelect: (String?) -> Unit,
     onNew: () -> Unit,
+    canCreateList: Boolean,
+    nativeAd: NativeAd?,
 ) {
+    val adLabel = stringResource(R.string.ad_label)
+    // Eine native Einheit nach den ersten 2–3 echten Karten (§5).
+    val adAfter = if (lists.size >= 3) 2 else lists.lastIndex
     Column(
         Modifier
             .weight(1f)
@@ -223,10 +253,17 @@ private fun ColumnScope.OverviewBody(
             .navigationBarsPadding(),
     ) {
         if (lists.isEmpty()) EmptyState()
-        lists.forEach { l ->
+        lists.forEachIndexed { i, l ->
             ListCard(l, onClick = { onSelect(l.id) })
+            if (nativeAd != null && i == adAfter) {
+                NativeAdCard(
+                    nativeAd = nativeAd,
+                    adLabel = adLabel,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                )
+            }
         }
-        NewListRow(onNew = onNew)
+        if (canCreateList) NewListRow(onNew = onNew) else LockedNewListRow(onNew = onNew)
     }
 }
 
@@ -345,6 +382,66 @@ private fun NewListRow(onNew: () -> Unit) {
     ) {
         Ic(IcPlus, tint = Tokens.AccentDeep, modifier = Modifier.size(19.dp))
         Txt(stringResource(R.string.new_list), fontSize = 14.5.sp, fontWeight = FontWeight.Bold, color = Tokens.AccentDeep)
+    }
+}
+
+/**
+ * Gesperrte „Neue Liste"-Kachel (§4): Schloss-Icon, „Neue Liste" gedämpft,
+ * pulsierender Akzent-Glow-Rand (analog [com.transparency.fxlens.ui.components.LiveDot],
+ * `prefers-reduced-motion` respektiert) und Hinweiszeile. Tap → Paywall (via onNew,
+ * das bei erreichtem Limit die Paywall öffnet).
+ */
+@Composable
+private fun LockedNewListRow(onNew: () -> Unit) {
+    val motionScale = LocalMotionScale.current
+    val pulse = if (motionScale > 0f) {
+        val transition = rememberInfiniteTransition(label = "lockGlow")
+        val p by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween((1800 * motionScale).toInt().coerceAtLeast(1), easing = Motion.EaseOut),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "lockGlow",
+        )
+        p
+    } else 0.6f
+    val glowAlpha = 0.28f + 0.62f * pulse
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp)
+            .scaleClick(scale = 0.99f, onClick = onNew)
+            .drawBehind {
+                val inset = 1.dp.toPx()
+                drawRoundRect(
+                    color = Tokens.AccentGlow.copy(alpha = glowAlpha),
+                    topLeft = Offset(inset, inset),
+                    size = Size(size.width - 2 * inset, size.height - 2 * inset),
+                    cornerRadius = CornerRadius(16.dp.toPx()),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            }
+            .padding(13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Ic(IcLock, tint = Tokens.Accent, modifier = Modifier.size(18.dp))
+        Column(Modifier.weight(1f)) {
+            Txt(
+                stringResource(R.string.new_list),
+                fontSize = 14.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = Tokens.AccentDeep,
+                modifier = Modifier.graphicsLayer { alpha = 0.55f },
+            )
+            Txt(
+                stringResource(R.string.lists_locked_hint),
+                fontSize = 12.sp,
+                color = Tokens.Ink2,
+            )
+        }
     }
 }
 

@@ -110,4 +110,40 @@
     <string name="lang_pt">Portuguese</string>
     <string name="lang_ar">Arabic</string>
     <string name="lang_ja">Japanese</string>
+
+    <!-- Paywall -->
+    <string name="paywall_eyebrow">Premium</string>
+    <string name="paywall_title_lists">Unlock more lists</string>
+    <string name="paywall_title_export">Export lists</string>
+    <string name="paywall_title_generic">Unlock ScanConvert</string>
+    <string name="paywall_subtitle">Buy once, keep forever. No subscriptions.</string>
+    <string name="paywall_popular">Most popular</string>
+    <string name="paywall_price_loading">…</string>
+    <string name="restore_purchases">Restore purchases</string>
+
+    <!-- Products -->
+    <string name="product_adfree_name">Ad-free</string>
+    <string name="product_adfree_desc">Permanently removes all ads.</string>
+    <string name="product_vacation_name">7-day vacation pass</string>
+    <string name="product_vacation_desc">One week ad-free – perfect for a trip.</string>
+    <string name="product_business_name">Business pack</string>
+    <string name="product_business_desc">Unlimited lists and CSV export.</string>
+    <string name="product_full_name">Full Premium</string>
+    <string name="product_full_desc">Ad-free, unlimited lists and export – everything included.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_upgrade">Premium / Remove ads</string>
+    <string name="settings_upgrade_sub">More lists, export and ad-free.</string>
+    <string name="settings_language">Language</string>
+    <string name="privacy_options">Privacy settings</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
+    <string name="settings_terms">Terms of use</string>
+
+    <!-- Lists gating / ads / export -->
+    <string name="lists_locked_hint">3/3 lists · Tap to unlock</string>
+    <string name="ad_label">Ad</string>
+    <string name="export_list">Export list</string>
+    <string name="export_failed">Export failed</string>
+    <string name="restore_started">Restoring purchases …</string>
 </resources>

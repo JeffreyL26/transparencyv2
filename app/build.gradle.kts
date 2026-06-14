@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,6 +8,20 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
+
+// AdMob-IDs werden NICHT im Repo hartkodiert (CLAUDE.md §9.2): aus local.properties
+// (gitignored) oder Gradle-Property gelesen, sonst Googles offizielle TEST-IDs.
+// Echte IDs erst kurz vor Release setzen — Klicks auf echte Ads im Test = Sperrgefahr.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun adProp(key: String, testDefault: String): String =
+    localProps.getProperty(key) ?: providers.gradleProperty(key).orNull ?: testDefault
+
+val admobAppId = adProp("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
+val admobNativeUnitId = adProp("ADMOB_NATIVE_UNIT_ID", "ca-app-pub-3940256099942544/2247696110")
+val admobRewardedUnitId = adProp("ADMOB_REWARDED_UNIT_ID", "ca-app-pub-3940256099942544/5224354917")
 
 android {
     namespace = "com.transparency.fxlens"
@@ -18,6 +33,12 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        // AdMob-App-ID ins Manifest (Pflicht-Meta-data, sonst Crash beim Start).
+        manifestPlaceholders["admobAppId"] = admobAppId
+        // Ad-Unit-IDs als BuildConfig-Felder (Test-Defaults).
+        buildConfigField("String", "ADMOB_NATIVE_UNIT_ID", "\"$admobNativeUnitId\"")
+        buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$admobRewardedUnitId\"")
     }
 
     buildTypes {
@@ -37,6 +58,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -73,4 +95,9 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+
+    // Monetarisierung: Play Billing 8, AdMob (native + rewarded), UMP-Consent.
+    implementation(libs.billing.ktx)
+    implementation(libs.play.services.ads)
+    implementation(libs.user.messaging.platform)
 }
