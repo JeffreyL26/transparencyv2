@@ -273,7 +273,6 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                     onUpgrade = { vm.closeSettings(); vm.openPaywall(PaywallContext.GENERIC) },
                     onRestore = vm::restorePurchases,
                     onPrivacyOptions = { activity?.let { vm.showPrivacyOptions(it) } },
-                    onLanguage = { vm.closeSettings(); langOpen = true },
                     onPrivacyPolicy = { openUrl(context, context.getString(R.string.privacy_url)) },
                     onTerms = { openUrl(context, context.getString(R.string.terms_url)) },
                     onClose = vm::closeSettings,

@@ -48,3 +48,38 @@ fun fmt(value: Double, code: String): String =
 /** Kurs mit 4 Nachkommastellen, Locale de-DE — z. B. "1,0850". */
 fun fmtRate(from: String, to: String, rates: Map<String, Double>): String =
     numberFormat(4).format(rateOf(from, to, rates))
+
+/**
+ * Editierbarer Roh-String OHNE Tausender-Trennzeichen (de-DE Komma) — z. B. "27,02"
+ * bzw. JPY "2700". Für das händische Anpassen einer falsch erkannten Zahl, damit das
+ * Eingabefeld einen sauber editierbaren Wert ohne „1.234"-Gruppierung zeigt.
+ */
+fun fmtPlain(value: Double, code: String): String {
+    val digits = CurrencyMeta.fractionDigits(code)
+    return DecimalFormat("0", deSymbols).apply {
+        isGroupingUsed = false
+        minimumFractionDigits = digits
+        maximumFractionDigits = digits
+    }.format(value)
+}
+
+/**
+ * Parst eine händisch eingegebene Betrags-Eingabe robust zu einem Double ≥ 0.
+ * Behandelt de-DE („1.234,56") wie US („1,234.56" / „27.02") und reine Komma-/
+ * Punkt-Dezimalstellen; leere/ungültige Eingaben → null.
+ */
+fun parseAmount(text: String): Double? {
+    val t = text.trim().replace(" ", "").replace(" ", "")
+    if (t.isEmpty()) return null
+    val hasComma = t.contains(',')
+    val hasDot = t.contains('.')
+    val normalized = when {
+        // Beide vorhanden: das ZULETZT stehende Zeichen ist das Dezimaltrennzeichen.
+        hasComma && hasDot ->
+            if (t.lastIndexOf(',') > t.lastIndexOf('.')) t.replace(".", "").replace(',', '.')
+            else t.replace(",", "")
+        hasComma -> t.replace(',', '.')
+        else -> t
+    }
+    return normalized.toDoubleOrNull()?.takeIf { it >= 0.0 }
+}

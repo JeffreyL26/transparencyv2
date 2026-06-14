@@ -3,6 +3,7 @@ package com.jbateam.scanconvert.ui.screens
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +36,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,7 +48,6 @@ import com.jbateam.scanconvert.data.CurrencyMeta
 import com.jbateam.scanconvert.ui.components.Flag
 import com.jbateam.scanconvert.ui.components.Ic
 import com.jbateam.scanconvert.ui.components.IcCheck
-import com.jbateam.scanconvert.ui.components.IcGlobe
 import com.jbateam.scanconvert.ui.components.PrimaryButton
 import com.jbateam.scanconvert.ui.components.scaleClick
 import com.jbateam.scanconvert.ui.theme.Motion
@@ -97,16 +98,25 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
             .padding(start = 22.dp, end = 22.dp, top = 64.dp, bottom = 22.dp)
             .navigationBarsPadding()
     ) {
+        // App-Icon (adaptives Launcher-Icon: dunkler Hintergrund + Scanner-Badge),
+        // gerundet wie eine Launcher-Kachel — nicht das alte Globus-Symbol.
         Box(
             Modifier
                 .padding(bottom = 18.dp)
                 .shadow(12.dp, RoundedCornerShape(16.dp), ambientColor = Tokens.AccentGlow, spotColor = Tokens.AccentGlow)
                 .size(52.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Tokens.Accent),
-            contentAlignment = Alignment.Center,
+                .clip(RoundedCornerShape(16.dp)),
         ) {
-            Ic(IcGlobe, tint = Color.White, modifier = Modifier.size(28.dp))
+            Image(
+                painter = painterResource(R.drawable.ic_launcher_background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Image(
+                painter = painterResource(R.drawable.ic_launcher_foreground),
+                contentDescription = stringResource(R.string.app_name),
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         Txt(

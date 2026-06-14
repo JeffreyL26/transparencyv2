@@ -139,6 +139,8 @@
     <string name="privacy_options">Datenschutzeinstellungen</string>
     <string name="settings_privacy_policy">Datenschutzerklärung</string>
     <string name="settings_terms">Nutzungsbedingungen</string>
+    <string name="adfree_cta">Werbung entfernen</string>
+    <string name="adfree_cta_sub">Keine Anzeigen mehr – einmal kaufen.</string>
 
     <!-- Listen-Limit &amp; Werbung -->
     <string name="lists_locked_hint">3/3 Listen · Tippen zum Freischalten</string>

@@ -139,6 +139,8 @@
     <string name="privacy_options">Privacy settings</string>
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_terms">Terms of use</string>
+    <string name="adfree_cta">Remove ads</string>
+    <string name="adfree_cta_sub">No more ads – one-time purchase.</string>
 
     <!-- Lists gating / ads / export -->
     <string name="lists_locked_hint">3/3 lists · Tap to unlock</string>

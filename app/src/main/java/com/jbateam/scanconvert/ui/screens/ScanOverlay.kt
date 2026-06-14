@@ -20,14 +20,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,13 +43,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -50,10 +64,13 @@ import com.jbateam.scanconvert.R
 import com.jbateam.scanconvert.domain.ScanPhase
 import com.jbateam.scanconvert.domain.convert
 import com.jbateam.scanconvert.domain.fmtNum
+import com.jbateam.scanconvert.domain.fmtPlain
 import com.jbateam.scanconvert.domain.fmtRate
+import com.jbateam.scanconvert.domain.parseAmount
 import com.jbateam.scanconvert.ui.components.Ic
 import com.jbateam.scanconvert.ui.components.IcArrow
 import com.jbateam.scanconvert.ui.components.IcCheck
+import com.jbateam.scanconvert.ui.components.IcEdit
 import com.jbateam.scanconvert.ui.components.IcPlus
 import com.jbateam.scanconvert.ui.components.LiveDot
 import com.jbateam.scanconvert.ui.components.scaleClick
@@ -130,6 +147,8 @@ fun ScanLayer(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
+                // Hebt die Karte über die Tastatur, wenn ein Betrag händisch angepasst wird.
+                .imePadding()
                 .padding(start = 12.dp, end = 12.dp, bottom = 22.dp),
         )
     }
@@ -320,6 +339,15 @@ private fun ResultCard(
     )
     val cardShape = RoundedCornerShape(26.dp)
     val multi = raws.size > 1
+
+    // Händisch korrigierbare Rohwerte: bei jedem neuen Scan (geänderte raws) zurückgesetzt.
+    // Quelle der Wahrheit für Umrechnung UND „Hinzufügen", falls die OCR daneben lag.
+    val effective = remember(raws) { mutableStateListOf<Double>().apply { addAll(raws) } }
+    var editingIndex by remember(raws) { mutableStateOf<Int?>(null) }
+    fun valueAt(i: Int): Double = effective.getOrElse(i) { raws.getOrElse(i) { 0.0 } }
+    // Beim Entsperren (neu scannen) Bearbeitung beenden → Tastatur schließt sich.
+    LaunchedEffect(locked) { if (!locked) editingIndex = null }
+
     Column(
         modifier
             .fillMaxWidth()
@@ -357,7 +385,7 @@ private fun ResultCard(
         }
 
         if (multi) {
-            raws.forEachIndexed { i, raw ->
+            raws.forEachIndexed { i, _ ->
                 if (i > 0) {
                     Box(
                         Modifier
@@ -367,19 +395,50 @@ private fun ResultCard(
                             .background(Tokens.Line)
                     )
                 }
-                StackedRow(raw = raw, from = from, to = to, rates = rates, onAdd = { onAdd(raw) })
+                StackedRow(
+                    raw = valueAt(i),
+                    from = from,
+                    to = to,
+                    rates = rates,
+                    editing = editingIndex == i,
+                    onStartEdit = { editingIndex = i },
+                    onValue = { v -> if (i < effective.size) effective[i] = v },
+                    onDoneEdit = { editingIndex = null },
+                    onAdd = { editingIndex = null; onAdd(valueAt(i)) },
+                )
             }
         } else {
-            val raw = raws.firstOrNull() ?: 0.0
-            SingleRow(raw = raw, from = from, to = to, rates = rates)
-            AddBar(onClick = { onAdd(raw) })
+            SingleRow(
+                raw = valueAt(0),
+                from = from,
+                to = to,
+                rates = rates,
+                editing = editingIndex == 0,
+                onStartEdit = { editingIndex = 0 },
+                onValue = { v -> if (effective.isEmpty()) effective.add(v) else effective[0] = v },
+                onDoneEdit = { editingIndex = null },
+            )
+            AddBar(onClick = { editingIndex = null; onAdd(valueAt(0)) })
         }
     }
 }
 
-/** Prominente Einzel-Umrechnung: VON-Betrag → ZU-Betrag. */
+/**
+ * Prominente Einzel-Umrechnung: VON-Betrag (antippbar → händisch korrigierbar) → ZU-Betrag.
+ * Bei falsch erkannter Zahl tippt der Nutzer den VON-Betrag an und passt ihn an; die
+ * Umrechnung rechts aktualisiert sich live und „Hinzufügen" übernimmt den korrigierten Wert.
+ */
 @Composable
-private fun SingleRow(raw: Double, from: String, to: String, rates: Map<String, Double>) {
+private fun SingleRow(
+    raw: Double,
+    from: String,
+    to: String,
+    rates: Map<String, Double>,
+    editing: Boolean,
+    onStartEdit: () -> Unit,
+    onValue: (Double) -> Unit,
+    onDoneEdit: () -> Unit,
+) {
     val conv = convert(raw, from, to, rates)
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -394,15 +453,33 @@ private fun SingleRow(raw: Double, from: String, to: String, rates: Map<String, 
                 color = Tokens.Ink3,
                 modifier = Modifier.padding(bottom = 3.dp),
             )
-            Txt(
-                fmtNum(raw, from),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = Grotesk,
-                letterSpacing = NumSpacing,
-                color = Tokens.Ink2,
-                maxLines = 1,
-            )
+            if (editing) {
+                AmountField(
+                    value = raw,
+                    code = from,
+                    style = numberStyle(24.sp, Tokens.Ink2),
+                    onValue = onValue,
+                    onDone = onDoneEdit,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                Row(
+                    Modifier.scaleClick(scale = 0.97f, onClick = onStartEdit),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Txt(
+                        fmtNum(raw, from),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = Grotesk,
+                        letterSpacing = NumSpacing,
+                        color = Tokens.Ink2,
+                        maxLines = 1,
+                    )
+                    Ic(IcEdit, tint = Tokens.Ink3, modifier = Modifier.size(15.dp))
+                }
+            }
         }
         Box(
             Modifier
@@ -462,13 +539,20 @@ private fun AddBar(onClick: () -> Unit) {
     }
 }
 
-/** Kompakte Zeile im Mehrfach-Fall: umgerechneter Betrag + Herkunft + eigenes „+". */
+/**
+ * Kompakte Zeile im Mehrfach-Fall: umgerechneter Betrag + (antippbar/korrigierbare)
+ * Herkunft + eigenes „+". Tippen auf die „aus …"-Zeile öffnet das Anpassen des Rohwerts.
+ */
 @Composable
 private fun StackedRow(
     raw: Double,
     from: String,
     to: String,
     rates: Map<String, Double>,
+    editing: Boolean,
+    onStartEdit: () -> Unit,
+    onValue: (Double) -> Unit,
+    onDoneEdit: () -> Unit,
     onAdd: () -> Unit,
 ) {
     val conv = convert(raw, from, to, rates)
@@ -499,12 +583,38 @@ private fun StackedRow(
                     modifier = Modifier.alignByBaseline(),
                 )
             }
-            Txt(
-                stringResource(R.string.from_amount, fmtNum(raw, from), from),
-                fontSize = 12.sp,
-                color = Tokens.Ink2,
-                modifier = Modifier.padding(top = 2.dp),
-            )
+            if (editing) {
+                Row(
+                    Modifier.padding(top = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    AmountField(
+                        value = raw,
+                        code = from,
+                        style = numberStyle(13.sp, Tokens.Ink),
+                        onValue = onValue,
+                        onDone = onDoneEdit,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Txt(from, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Tokens.Ink3)
+                }
+            } else {
+                Row(
+                    Modifier
+                        .padding(top = 2.dp)
+                        .scaleClick(scale = 0.98f, onClick = onStartEdit),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    Txt(
+                        stringResource(R.string.from_amount, fmtNum(raw, from), from),
+                        fontSize = 12.sp,
+                        color = Tokens.Ink2,
+                    )
+                    Ic(IcEdit, tint = Tokens.Ink3, modifier = Modifier.size(12.dp))
+                }
+            }
         }
         Box(
             Modifier
@@ -518,4 +628,48 @@ private fun StackedRow(
             Ic(IcPlus, tint = Color.White, modifier = Modifier.size(18.dp))
         }
     }
+}
+
+/** Zahlen-TextStyle (Space Grotesk) für statische Anzeige und Eingabefeld identisch. */
+private fun numberStyle(size: TextUnit, color: Color): TextStyle = TextStyle(
+    color = color,
+    fontSize = size,
+    fontWeight = FontWeight.Bold,
+    fontFamily = Grotesk,
+    letterSpacing = NumSpacing,
+)
+
+/**
+ * Inline-Eingabefeld zum händischen Anpassen eines erkannten Betrags. Hält einen eigenen
+ * Text-Puffer; jeder gültig geparste Wert wird sofort via [onValue] gemeldet (Umrechnung
+ * aktualisiert live). Numerische Tastatur, „Fertig" schließt die Bearbeitung.
+ */
+@Composable
+private fun AmountField(
+    value: Double,
+    code: String,
+    style: TextStyle,
+    onValue: (Double) -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var text by remember { mutableStateOf(fmtPlain(value, code)) }
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    BasicTextField(
+        value = text,
+        onValueChange = { txt ->
+            val filtered = txt.filter { it.isDigit() || it == ',' || it == '.' }
+            text = filtered
+            parseAmount(filtered)?.let(onValue)
+        },
+        singleLine = true,
+        textStyle = style,
+        cursorBrush = SolidColor(Tokens.Accent),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+        modifier = modifier
+            .widthIn(min = 32.dp)
+            .focusRequester(focusRequester),
+    )
 }
