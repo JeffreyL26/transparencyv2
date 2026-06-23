@@ -1,7 +1,7 @@
 # ScanConvert — Kamera-Währungsscanner mit Reise-Budget-Listen (Android)
 
-> Vormals „FX Lens". Der Anzeigename der App ist **ScanConvert**; das interne
-> Package ist `com.jbateam.scanconvert` (zugleich `applicationId`).
+> Vormals „FX Lens". Der Anzeigename der App ist **ScanConvert - Travel Tool**; das
+> interne Package ist `com.jbateam.scanconvert` (zugleich `applicationId`).
 
 Native Android-Umsetzung (Kotlin, Jetpack Compose) des Design-Handoffs in
 [`design_handoff/`](design_handoff/README.md) — ein 1:1-Nachbau der HTML/React-Referenz
@@ -60,6 +60,26 @@ automatisch an).
 > Profilpfad + Fortinet-VPN-Filtertreibern). Workaround: `mkdir C:\tmp` und
 > `set JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:/tmp` (wirkt auf Client-,
 > Daemon- und Worker-JVMs; für Android Studio als Benutzer-Umgebungsvariable setzen).
+
+## Kaufpflichtige Features testen (nur Debug)
+
+Für lokales Testen der Premium-Features **ohne Play Console / License-Tester** gibt es
+eine Debug-Entitlement-Naht (§13.2): Sie greift **ausschließlich in `BuildConfig.DEBUG`**.
+Die Produktivquelle bleibt unverändert `BillingRepository` (Google Play = Source of
+Truth) — der `AppContainer` wählt im Debug-Build stattdessen `DebugEntitlementSource`,
+die den echten Entitlement-Flow per lokalem Override (eigener DataStore
+`scanconvert_dev`) überschreibt. Im Release-Build ist der Zweig toter, nie
+ausgeführter Code (`BuildConfig.DEBUG` = Compile-Zeit-`false`); das Laufzeitverhalten
+ist identisch zur reinen `BillingRepository`-Quelle.
+
+- **Öffnen:** auf dem Scan-Screen **lange auf den Sprach-Button (unten links)** drücken.
+- **Schalter:** Werbefrei (`adFree`, §5/§7.4), Unbegrenzte Listen (`unlimitedLists`, §4),
+  Export (`listExport`, §7.2), „Vacation-Pass: 7 Tage" (§3) und **„Override aus"**
+  (zurück zur echten Quelle).
+
+> Hinweis: Das Dev-Sheet ist komplett hinter `BuildConfig.DEBUG` verdrahtet und im
+> Release nicht erreichbar. Eine physische Entfernung aus dem Release-APK erfordert
+> R8/`isMinifyEnabled = true` (aktuell aus).
 
 ## Bewusste Abweichungen von der Referenz
 

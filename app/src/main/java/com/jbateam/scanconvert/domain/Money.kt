@@ -3,6 +3,8 @@ package com.jbateam.scanconvert.domain
 import com.jbateam.scanconvert.data.CurrencyMeta
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 /**
@@ -48,6 +50,23 @@ fun fmt(value: Double, code: String): String =
 /** Kurs mit 4 Nachkommastellen, Locale de-DE — z. B. "1,0850". */
 fun fmtRate(from: String, to: String, rates: Map<String, Double>): String =
     numberFormat(4).format(rateOf(from, to, rates))
+
+/**
+ * Historischer Kurs einer erfassten Position: aus dem zum Scan-Zeitpunkt fixierten
+ * Wert abgeleitet (`value/raw`), unabhängig vom aktuellen Live-Kurs. 0, falls `raw` 0 ist.
+ */
+fun histRate(raw: Double, value: Double): Double = if (raw > 0.0) value / raw else 0.0
+
+/**
+ * Lesbarer „Kurs zum Zeitpunkt" einer Position — z. B. „1 EUR = 1,1438 USD".
+ * Quelle ist der fixierte Wert der Position, nicht der aktuelle Kurs (§7).
+ */
+fun fmtHistRate(from: String, currency: String, raw: Double, value: Double): String =
+    "1 $from = " + numberFormat(4).format(histRate(raw, value)) + " " + currency
+
+/** Datum + Uhrzeit einer Erfassung, Locale de-DE — z. B. „23.06.2026, 14:32". */
+fun fmtDateTime(ts: Long): String =
+    SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.GERMANY).format(Date(ts))
 
 /**
  * Editierbarer Roh-String OHNE Tausender-Trennzeichen (de-DE Komma) — z. B. "27,02"

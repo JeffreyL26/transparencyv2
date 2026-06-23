@@ -37,12 +37,12 @@ class BillingRepository(
     private val app: Application,
     private val prefs: Prefs,
     private val scope: CoroutineScope,
-) {
+) : EntitlementSource {
     private val _entitlements = MutableStateFlow(Entitlements())
-    val entitlements: StateFlow<Entitlements> = _entitlements
+    override val entitlements: StateFlow<Entitlements> = _entitlements
 
     private val _products = MutableStateFlow<List<ProductInfo>>(emptyList())
-    val products: StateFlow<List<ProductInfo>> = _products
+    override val products: StateFlow<List<ProductInfo>> = _products
 
     /** Aktuell „besessene" dauerhafte Produkt-IDs (ohne Vacation-Pass, der ist zeitbasiert). */
     @Volatile private var owned: Set<String> = emptySet()

@@ -50,6 +50,8 @@ import com.jbateam.scanconvert.domain.ListItem
 import com.jbateam.scanconvert.domain.TravelList
 import com.jbateam.scanconvert.domain.convert
 import com.jbateam.scanconvert.domain.fmt
+import com.jbateam.scanconvert.domain.fmtDateTime
+import com.jbateam.scanconvert.domain.fmtHistRate
 import com.jbateam.scanconvert.domain.total
 import com.jbateam.scanconvert.ui.components.Field
 import com.jbateam.scanconvert.ui.components.FieldInput
@@ -414,6 +416,13 @@ fun EditItemSheet(
                     fontSize = 12.sp,
                     color = Tokens.Ink2,
                     modifier = Modifier.padding(top = 5.dp),
+                )
+                // Dezente Nachverfolgung: WANN erfasst + Kurs zum Zeitpunkt (§7).
+                Txt(
+                    fmtDateTime(item.ts) + "  ·  " + fmtHistRate(item.from, currency, item.raw, item.value),
+                    fontSize = 11.sp,
+                    color = Tokens.Ink3,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
             }
             Spacer(Modifier.weight(1f))

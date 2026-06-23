@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ScanConvert</string>
+    <string name="app_name">ScanConvert - Travel Tool</string>
 
     <!-- gemeinsame Aktionen -->
     <string name="action_save">Speichern</string>

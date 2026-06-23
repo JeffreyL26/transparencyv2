@@ -340,9 +340,16 @@ fun EdgeTab(onClick: () -> Unit, modifier: Modifier = Modifier) {
 /**
  * Sprach-Button (§F4): runder Glas-Button mit Sprechblasen-Icon, unten links.
  * Gleicher Glas-Stil wie Edge-Tab / Swap-Button.
+ *
+ * [onLongClick] ist optional und bleibt in Release `null`. Im Debug-Build dient der
+ * Long-Press als versteckter Einstieg ins Dev-Sheet (§13.2).
  */
 @Composable
-fun LanguageButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun LanguageButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
+) {
     Box(
         modifier
             .size(52.dp)
@@ -350,7 +357,7 @@ fun LanguageButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .clip(CircleShape)
             .background(Tokens.GlassStrong)
             .border(1.dp, Color(0xA6FFFFFF), CircleShape)
-            .scaleClick(onClick = onClick),
+            .scaleClick(onLongClick = onLongClick, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Ic(IcChat, tint = Tokens.AccentDeep, modifier = Modifier.size(25.dp))

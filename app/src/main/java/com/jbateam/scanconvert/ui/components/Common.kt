@@ -7,9 +7,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -53,10 +54,16 @@ import com.jbateam.scanconvert.ui.theme.motionTween
 
 /**
  * Klick mit Press-Scale-Feedback (§11: scale 0.98–0.99, ~0.12 s) ohne Ripple.
+ *
+ * [onLongClick] ist optional und bleibt im Normalfall `null` (reines [clickable]).
+ * Wird er gesetzt, kommt [combinedClickable] zum Einsatz — genutzt allein vom
+ * versteckten Dev-Sheet-Einstieg (Long-Press, nur Debug; §13.2).
  */
+@OptIn(ExperimentalFoundationApi::class)
 fun Modifier.scaleClick(
     scale: Float = 0.98f,
     enabled: Boolean = true,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ): Modifier = composed {
     val interaction = remember { MutableInteractionSource() }
@@ -71,7 +78,13 @@ fun Modifier.scaleClick(
             scaleX = s
             scaleY = s
         }
-        .clickable(interactionSource = interaction, indication = null, enabled = enabled, onClick = onClick)
+        .combinedClickable(
+            interactionSource = interaction,
+            indication = null,
+            enabled = enabled,
+            onLongClick = onLongClick,
+            onClick = onClick,
+        )
 }
 
 /**

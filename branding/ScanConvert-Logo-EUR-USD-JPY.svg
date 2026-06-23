@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" aria-label="ScanConvert">
+  <defs>
+    <radialGradient id="bg" cx="42%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#1E1B14"></stop>
+      <stop offset="100%" stop-color="#0D0B08"></stop>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"></rect>
+  <rect x="210" y="486" width="604" height="52" rx="26" fill="#1F9D6B" opacity="0.22"></rect>
+  <path d="M210 414 L210 210 L414 210" fill="none" stroke="white" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" opacity="0.93"></path>
+  <path d="M610 210 L814 210 L814 414" fill="none" stroke="white" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" opacity="0.93"></path>
+  <path d="M210 610 L210 814 L414 814" fill="none" stroke="white" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" opacity="0.93"></path>
+  <path d="M610 814 L814 814 L814 610" fill="none" stroke="white" stroke-width="56" stroke-linecap="round" stroke-linejoin="round" opacity="0.93"></path>
+  <text x="310" y="512" font-family="Space Grotesk, sans-serif" font-weight="800" font-size="182" fill="white" text-anchor="middle" dominant-baseline="middle" opacity="0.95">€</text>
+  <text x="512" y="512" font-family="Space Grotesk, sans-serif" font-weight="800" font-size="182" fill="white" text-anchor="middle" dominant-baseline="middle" opacity="0.95">$</text>
+  <text x="714" y="512" font-family="Space Grotesk, sans-serif" font-weight="800" font-size="182" fill="white" text-anchor="middle" dominant-baseline="middle" opacity="0.95">¥</text>
+  <rect x="210" y="498" width="604" height="28" rx="14" fill="#1F9D6B" opacity="0.84"></rect>
+</svg>

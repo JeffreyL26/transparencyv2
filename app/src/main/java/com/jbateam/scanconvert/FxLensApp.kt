@@ -9,6 +9,8 @@ import com.jbateam.scanconvert.data.ads.ConsentManager
 import com.jbateam.scanconvert.data.ads.NativeAdLoader
 import com.jbateam.scanconvert.data.ads.RewardedAdManager
 import com.jbateam.scanconvert.data.billing.BillingRepository
+import com.jbateam.scanconvert.data.billing.DebugEntitlementSource
+import com.jbateam.scanconvert.data.billing.EntitlementSource
 import com.jbateam.scanconvert.data.db.FxDatabase
 import com.jbateam.scanconvert.data.db.MIGRATION_1_2
 import kotlinx.coroutines.CoroutineScope
@@ -38,6 +40,18 @@ class AppContainer(app: Application) {
         .build()
     val listsRepository = ListsRepository(db.listsDao())
     val billingRepository = BillingRepository(app, prefs, appScope)
+
+    /**
+     * Quelle der Entitlements (CLAUDE.md §13.2): In Release direkt das
+     * [BillingRepository] (Produktivquelle, Google Play = Source of Truth).
+     * Im Debug-Build umhüllt von [DebugEntitlementSource], damit kaufpflichtige
+     * Features ohne echte Kaufabwicklung lokal testbar sind. Release referenziert
+     * die Debug-Quelle nie — `BuildConfig.DEBUG` ist dort eine Compile-Zeit-`false`,
+     * der Zweig ist toter Code und wird nie ausgeführt.
+     */
+    val entitlementsSource: EntitlementSource =
+        if (BuildConfig.DEBUG) DebugEntitlementSource(app, billingRepository, appScope)
+        else billingRepository
 
     // Werbung & Consent (CLAUDE.md §6/§8) — Objekte app-weit, der Consent-Flow
     // selbst läuft Activity-gebunden in MainActivity.

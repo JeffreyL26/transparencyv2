@@ -17,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,9 +29,13 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import com.jbateam.scanconvert.BuildConfig
+import com.jbateam.scanconvert.FxLensApp
 import com.jbateam.scanconvert.MainViewModel
 import com.jbateam.scanconvert.R
 import com.jbateam.scanconvert.data.LocaleStore
+import com.jbateam.scanconvert.data.billing.DebugEntitlementSource
+import com.jbateam.scanconvert.data.billing.DevOverride
 import com.jbateam.scanconvert.data.billing.PaywallContext
 import com.jbateam.scanconvert.domain.CreateMode
 import com.jbateam.scanconvert.domain.ScanPhase
@@ -39,6 +44,7 @@ import com.jbateam.scanconvert.ui.components.AppToast
 import com.jbateam.scanconvert.ui.screens.AddToListSheet
 import com.jbateam.scanconvert.ui.screens.CreateListSheet
 import com.jbateam.scanconvert.ui.screens.CustomRateSheet
+import com.jbateam.scanconvert.ui.screens.DevSheet
 import com.jbateam.scanconvert.ui.screens.EdgeTab
 import com.jbateam.scanconvert.ui.screens.EditItemSheet
 import com.jbateam.scanconvert.ui.screens.EditListSheet
@@ -52,6 +58,7 @@ import com.jbateam.scanconvert.ui.screens.PickerSheet
 import com.jbateam.scanconvert.ui.screens.ScanLayer
 import com.jbateam.scanconvert.ui.screens.SettingsSheet
 import com.jbateam.scanconvert.ui.theme.FxTheme
+import kotlinx.coroutines.launch
 
 /**
  * Schichtung wie im Prototyp (z-Reihenfolge von unten):
@@ -77,8 +84,19 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
     val activity = context as? Activity
 
     var langOpen by remember { mutableStateOf(false) }
+
+    // Verstecktes Dev-Sheet (§13.2) — nur Debug. Die DebugEntitlementSource liegt nur
+    // im Debug-Build im Container; in Release ist `devSource` null und nichts referenziert.
+    var devOpen by remember { mutableStateOf(false) }
+    val devSource = remember {
+        if (BuildConfig.DEBUG) {
+            (context.applicationContext as? FxLensApp)?.container?.entitlementsSource as? DebugEntitlementSource
+        } else null
+    }
+
     val overlayOpen = vm.picker != null || vm.addOpen || vm.creating != null || vm.panelOpen ||
-        vm.customOpen || langOpen || vm.paywallOpen != null || vm.settingsOpen
+        vm.customOpen || langOpen || vm.paywallOpen != null || vm.settingsOpen ||
+        (BuildConfig.DEBUG && devOpen)
 
     // Fertiger CSV-Export: Teilen-Dialog starten, dann State leeren (§6.4).
     val shareIntent = vm.pendingShare
@@ -155,6 +173,10 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
             if (onboarded == true && !overlayOpen && vm.scanPhase is ScanPhase.Scanning) {
                 LanguageButton(
                     onClick = { langOpen = true },
+                    // Long-Press öffnet im Debug-Build das versteckte Dev-Sheet (§13.2).
+                    onLongClick = if (BuildConfig.DEBUG && devSource != null) {
+                        { devOpen = true }
+                    } else null,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .navigationBarsPadding()
@@ -301,6 +323,22 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                         onSetLanguage(lang)
                     },
                     onClose = { langOpen = false },
+                )
+            }
+
+            // Verstecktes Dev-Sheet (§13.2) — nur Debug, schaltet lokale Entitlements.
+            if (BuildConfig.DEBUG && devOpen && devSource != null) {
+                val src = devSource
+                val scope = rememberCoroutineScope()
+                val ov by src.override.collectAsState(initial = DevOverride())
+                DevSheet(
+                    override = ov,
+                    onSetAdFree = { scope.launch { src.setAdFree(it) } },
+                    onSetUnlimited = { scope.launch { src.setUnlimited(it) } },
+                    onSetExport = { scope.launch { src.setExport(it) } },
+                    onGrantVacationPass = { scope.launch { src.grantVacationPass() } },
+                    onClearOverride = { scope.launch { src.clearOverride() } },
+                    onClose = { devOpen = false },
                 )
             }
 

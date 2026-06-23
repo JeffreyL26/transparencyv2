@@ -2,6 +2,7 @@ package com.jbateam.scanconvert
 
 import android.app.Activity
 import android.app.Application
+import android.content.ClipData
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
@@ -23,7 +24,6 @@ import com.jbateam.scanconvert.data.billing.Entitlements
 import com.jbateam.scanconvert.data.billing.PaywallContext
 import com.jbateam.scanconvert.data.billing.ProductInfo
 import com.jbateam.scanconvert.data.export.PdfExporter
-import com.jbateam.scanconvert.data.export.buildListExportHtml
 import com.google.android.gms.ads.nativead.NativeAd
 import com.jbateam.scanconvert.domain.CreateMode
 import com.jbateam.scanconvert.domain.ListItem
@@ -65,6 +65,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val listsRepo = container.listsRepository
     private val ratesRepo = container.ratesRepository
     private val billingRepo = container.billingRepository
+    // Lese-Quelle für Entitlements/Produkte (§13.2): in Release == billingRepo,
+    // im Debug-Build die DebugEntitlementSource (lokaler Override). Käufe/Restore
+    // laufen weiterhin direkt über billingRepo (echte Play-Aktionen).
+    private val entitlementsSource = container.entitlementsSource
 
     // ---------- persistenter State ----------
     /** Vom Nutzer angelegte Custom-Währungen (§F2). */
@@ -102,12 +106,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     // ---------- Monetarisierung (§2/§6.3) ----------
-    /** Abgeleitete Entitlements (Source of Truth = Play, Cache = sofortige UX). */
-    val entitlements: StateFlow<Entitlements> = billingRepo.entitlements
+    /** Abgeleitete Entitlements (Source of Truth = Play, Cache = sofortige UX; §13.2-Naht). */
+    val entitlements: StateFlow<Entitlements> = entitlementsSource.entitlements
         .stateIn(viewModelScope, SharingStarted.Eagerly, Entitlements())
 
     /** Produkte inkl. von Google geliefertem `formattedPrice` (nie hartkodiert, §11). */
-    val products: StateFlow<List<ProductInfo>> = billingRepo.products
+    val products: StateFlow<List<ProductInfo>> = entitlementsSource.products
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** Free: max. 3 Listen; mit unlimitedLists unbegrenzt (§4). */
@@ -556,7 +560,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             showToast(str(R.string.export_creating))
             val app = getApplication<Application>()
             val file = withTimeoutOrNull(20_000) {
-                PdfExporter.renderListPdf(app, buildListExportHtml(list), exportPdfFile(app, list))
+                PdfExporter.renderListPdf(app, list, exportPdfFile(app, list))
             }
             if (file != null) pendingShare = pdfShareIntent(app, file, list.name)
             else showToast(str(R.string.export_failed))
@@ -581,6 +585,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             type = "application/pdf"
             putExtra(Intent.EXTRA_STREAM, uri)
             putExtra(Intent.EXTRA_SUBJECT, title)
+            // clipData zusätzlich setzen, damit auch der Vorschau-/Sharesheet-Prozess
+            // Leserechte auf die URI erhält (sonst „Permission Denial" beim Preview).
+            clipData = ClipData.newUri(app.contentResolver, title, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
     }
