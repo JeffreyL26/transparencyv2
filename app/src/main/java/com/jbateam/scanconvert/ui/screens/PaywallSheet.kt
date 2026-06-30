@@ -44,6 +44,9 @@ fun PaywallSheet(
     products: List<ProductInfo>,
     onBuy: (productId: String) -> Unit,
     onRestore: () -> Unit,
+    onPrivacyPolicy: () -> Unit,
+    onTerms: () -> Unit,
+    onPrivacyOptions: (() -> Unit)?,
     onClose: () -> Unit,
 ) {
     val byId = products.associateBy { it.id }
@@ -101,6 +104,29 @@ fun PaywallSheet(
                 color = Tokens.AccentDeep,
             )
         }
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                PaywallLink(stringResource(R.string.settings_privacy_policy), onPrivacyPolicy)
+                PaywallLink(stringResource(R.string.settings_terms), onTerms)
+            }
+            if (onPrivacyOptions != null) {
+                PaywallLink(stringResource(R.string.privacy_options), onPrivacyOptions)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaywallLink(text: String, onClick: () -> Unit) {
+    Box(Modifier.scaleClick(scale = 0.98f, onClick = onClick)) {
+        Txt(text, fontSize = 11.sp, color = Tokens.Ink3)
     }
 }
 

@@ -71,8 +71,11 @@ import com.jbateam.scanconvert.ui.components.Ic
 import com.jbateam.scanconvert.ui.components.IcArrow
 import com.jbateam.scanconvert.ui.components.IcCheck
 import com.jbateam.scanconvert.ui.components.IcEdit
+import com.jbateam.scanconvert.ui.components.IcKeyboard
 import com.jbateam.scanconvert.ui.components.IcPlus
 import com.jbateam.scanconvert.ui.components.LiveDot
+import com.jbateam.scanconvert.ui.components.SheetScaffold
+import com.jbateam.scanconvert.ui.components.SheetTitle
 import com.jbateam.scanconvert.ui.components.scaleClick
 import com.jbateam.scanconvert.ui.theme.Grotesk
 import com.jbateam.scanconvert.ui.theme.LocalMotionScale
@@ -638,6 +641,122 @@ private fun numberStyle(size: TextUnit, color: Color): TextStyle = TextStyle(
     fontFamily = Grotesk,
     letterSpacing = NumSpacing,
 )
+
+/**
+ * Manueller Betrag-Sheet (Tastatur-Button): FROM-Betrag eingeben → TO live umgerechnet.
+ * Kein Scanner-Zustand nötig — reine lokale Berechnung.
+ */
+@Composable
+fun ManualInputSheet(
+    from: String,
+    to: String,
+    rates: Map<String, Double>,
+    onClose: () -> Unit,
+) {
+    var text by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    val amount = remember(text) { parseAmount(text) ?: 0.0 }
+    val conv = if (amount > 0) convert(amount, from, to, rates) else null
+
+    SheetScaffold(onDismiss = onClose) {
+        SheetTitle(stringResource(R.string.manual_input_title))
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                Txt(
+                    from,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.06.em,
+                    color = Tokens.Ink3,
+                    modifier = Modifier.padding(bottom = 3.dp),
+                )
+                BasicTextField(
+                    value = text,
+                    onValueChange = { txt ->
+                        text = txt.filter { it.isDigit() || it == ',' || it == '.' }
+                    },
+                    singleLine = true,
+                    textStyle = numberStyle(24.sp, Tokens.Ink2),
+                    cursorBrush = SolidColor(Tokens.Accent),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { onClose() }),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    decorationBox = { inner ->
+                        Box {
+                            if (text.isEmpty()) {
+                                Txt(
+                                    "0",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = Grotesk,
+                                    letterSpacing = NumSpacing,
+                                    color = Tokens.Ink3,
+                                )
+                            }
+                            inner()
+                        }
+                    },
+                )
+            }
+            Box(
+                Modifier
+                    .size(34.dp)
+                    .background(Tokens.AccentSoft, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Ic(IcArrow, tint = Tokens.AccentDeep, modifier = Modifier.size(17.dp))
+            }
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                Txt(
+                    to,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.06.em,
+                    color = Tokens.Ink3,
+                    modifier = Modifier.padding(bottom = 3.dp),
+                )
+                Txt(
+                    conv?.let { fmtNum(it, to) } ?: "—",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = Grotesk,
+                    letterSpacing = NumSpacing,
+                    color = if (conv != null) Tokens.Ink else Tokens.Ink3,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+/** Runder Glas-Button mit Tastatur-Icon — gleicher Stil wie LanguageButton. */
+@Composable
+fun ManualInputButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(52.dp)
+            .shadow(10.dp, CircleShape)
+            .clip(CircleShape)
+            .background(Tokens.GlassStrong)
+            .border(1.dp, Color(0xA6FFFFFF), CircleShape)
+            .scaleClick(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Ic(IcKeyboard, tint = Tokens.AccentDeep, modifier = Modifier.size(25.dp))
+    }
+}
 
 /**
  * Inline-Eingabefeld zum händischen Anpassen eines erkannten Betrags. Hält einen eigenen

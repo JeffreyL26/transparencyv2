@@ -55,6 +55,8 @@ import com.jbateam.scanconvert.ui.screens.ListsPanel
 import com.jbateam.scanconvert.ui.screens.OnboardingScreen
 import com.jbateam.scanconvert.ui.screens.PaywallSheet
 import com.jbateam.scanconvert.ui.screens.PickerSheet
+import com.jbateam.scanconvert.ui.screens.ManualInputButton
+import com.jbateam.scanconvert.ui.screens.ManualInputSheet
 import com.jbateam.scanconvert.ui.screens.ScanLayer
 import com.jbateam.scanconvert.ui.screens.SettingsSheet
 import com.jbateam.scanconvert.ui.theme.FxTheme
@@ -84,6 +86,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
     val activity = context as? Activity
 
     var langOpen by remember { mutableStateOf(false) }
+    var manualInputOpen by remember { mutableStateOf(false) }
 
     // Verstecktes Dev-Sheet (§13.2) — nur Debug. Die DebugEntitlementSource liegt nur
     // im Debug-Build im Container; in Release ist `devSource` null und nichts referenziert.
@@ -96,7 +99,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
 
     val overlayOpen = vm.picker != null || vm.addOpen || vm.creating != null || vm.panelOpen ||
         vm.customOpen || langOpen || vm.paywallOpen != null || vm.settingsOpen ||
-        (BuildConfig.DEBUG && devOpen)
+        manualInputOpen || (BuildConfig.DEBUG && devOpen)
 
     // Fertiger CSV-Export: Teilen-Dialog starten, dann State leeren (§6.4).
     val shareIntent = vm.pendingShare
@@ -169,7 +172,8 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                     .offset(y = 300.dp),
             )
 
-            // Sprach-Button unten links (§F4) — im ruhigen Scan-Zustand sichtbar.
+            // Sprach-Button unten links (§F4) + Tastatur-Button unten rechts —
+            // beide nur im ruhigen Scan-Zustand sichtbar.
             if (onboarded == true && !overlayOpen && vm.scanPhase is ScanPhase.Scanning) {
                 LanguageButton(
                     onClick = { langOpen = true },
@@ -181,6 +185,13 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                         .align(Alignment.BottomStart)
                         .navigationBarsPadding()
                         .padding(start = 18.dp, bottom = 22.dp),
+                )
+                ManualInputButton(
+                    onClick = { manualInputOpen = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .navigationBarsPadding()
+                        .padding(end = 18.dp, bottom = 22.dp),
                 )
             }
 
@@ -236,6 +247,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                 canCreateList = canCreateList,
                 isAdFree = entitlements.adFree,
                 onSettings = vm::openSettings,
+                onUpgrade = { vm.openPaywall(PaywallContext.GENERIC) },
                 onExport = { id -> vm.exportList(id) },
                 // Native-Anzeige nur im kühlen Pfad und nie für werbefreie Nutzer (§5/§11).
                 nativeAd = if (entitlements.adFree) null else nativeAd,
@@ -309,7 +321,22 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                     products = products,
                     onBuy = { id -> activity?.let { vm.purchase(it, id) } },
                     onRestore = vm::restorePurchases,
+                    onPrivacyPolicy = { openUrl(context, context.getString(R.string.privacy_url)) },
+                    onTerms = { openUrl(context, context.getString(R.string.terms_url)) },
+                    onPrivacyOptions = if (vm.privacyOptionsRequired) {
+                        { activity?.let { vm.showPrivacyOptions(it) } }
+                    } else null,
                     onClose = vm::closePaywall,
+                )
+            }
+
+            // Manuelle Betragseingabe (Tastatur-Button)
+            if (manualInputOpen) {
+                ManualInputSheet(
+                    from = vm.from,
+                    to = vm.to,
+                    rates = rates.rates,
+                    onClose = { manualInputOpen = false },
                 )
             }
 

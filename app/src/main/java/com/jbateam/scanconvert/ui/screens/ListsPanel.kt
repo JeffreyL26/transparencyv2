@@ -104,6 +104,7 @@ fun ListsPanel(
     canCreateList: Boolean,
     isAdFree: Boolean,
     onSettings: () -> Unit,
+    onUpgrade: () -> Unit,
     onExport: (String) -> Unit,
     nativeAd: NativeAd?,
     onEdit: (String) -> Unit,
@@ -149,12 +150,11 @@ fun ListsPanel(
                     DetailBody(list = list, onDeleteItem = onDeleteItem, onEditItem = onEditItem)
                 } else {
                     OverviewHead(onSettings = onSettings, onClose = onClose, isAdFree = isAdFree)
-                    // Prominenter, animierter Werbefrei-CTA direkt in „Meine Listen" (statt
-                    // nur dem unscheinbaren Zahnrad) — niedrigere Kaufschwelle. Öffnet das
-                    // Einstellungs-Menü mit Plänen, Käufe-Wiederherstellen und Datenschutz.
+                    // Prominenter, animierter Werbefrei-CTA direkt in „Meine Listen" —
+                    // öffnet die Pläne direkt, ohne Umweg über das Einstellungs-Menü.
                     if (!isAdFree) {
                         AdFreeCtaButton(
-                            onClick = onSettings,
+                            onClick = onUpgrade,
                             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp),
                         )
                     }

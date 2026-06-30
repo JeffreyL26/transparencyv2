@@ -152,6 +152,9 @@
     <string name="export_failed">Export fehlgeschlagen</string>
     <string name="restore_started">Käufe werden wiederhergestellt …</string>
 
+    <!-- Manueller Betragseingabe -->
+    <string name="manual_input_title">Betrag umrechnen</string>
+
     <!-- Rechtliche Links (Platzhalter – vor Release ersetzen) -->
     <string name="privacy_url" translatable="false">https://example.com/privacy</string>
     <string name="terms_url" translatable="false">https://example.com/terms</string>
