@@ -98,8 +98,9 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
             .padding(start = 22.dp, end = 22.dp, top = 64.dp, bottom = 22.dp)
             .navigationBarsPadding()
     ) {
-        // App-Icon (adaptives Launcher-Icon: dunkler Hintergrund + Scanner-Badge),
-        // gerundet wie eine Launcher-Kachel — nicht das alte Globus-Symbol.
+        // App-Icon (adaptives Launcher-Icon: dunkler Hintergrund + neues Logo-Vordergrund
+        // aus @mipmap/ic_launcher_fg), gerundet wie eine Launcher-Kachel — identisch zum
+        // realen Launcher-Icon, nicht das alte Monochrom-Motiv.
         Box(
             Modifier
                 .padding(bottom = 18.dp)
@@ -113,7 +114,7 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
                 modifier = Modifier.fillMaxSize(),
             )
             Image(
-                painter = painterResource(R.drawable.ic_launcher_foreground),
+                painter = painterResource(R.mipmap.ic_launcher_fg),
                 contentDescription = stringResource(R.string.app_name),
                 modifier = Modifier.fillMaxSize(),
             )
