@@ -17,15 +17,15 @@ import kotlinx.serialization.json.Json
  * Persistente Keys (Handoff §7): Pins (max 4, Reihenfolge = Pin-Reihenfolge)
  * und Onboarding-Flag — via DataStore.
  */
-private val Context.dataStore by preferencesDataStore(name = "fxlens")
+private val Context.dataStore by preferencesDataStore(name = "scanconvert")
 
 class Prefs(private val context: Context) {
 
-    private val pinsKey = stringPreferencesKey("fxlens_pins")
-    private val onboardedKey = booleanPreferencesKey("fxlens_onboarded")
-    private val seededKey = booleanPreferencesKey("fxlens_seeded")
-    private val recentsKey = stringPreferencesKey("fxlens_recents")
-    private val customsKey = stringPreferencesKey("fxlens_customs")
+    private val pinsKey = stringPreferencesKey("scanconvert_pins")
+    private val onboardedKey = booleanPreferencesKey("scanconvert_onboarded")
+    private val seededKey = booleanPreferencesKey("scanconvert_seeded")
+    private val recentsKey = stringPreferencesKey("scanconvert_recents")
+    private val customsKey = stringPreferencesKey("scanconvert_customs")
 
     // Entitlement-Cache (§6.1): Quelle der Wahrheit ist Play; der Cache liefert
     // sofortige UX offline / bevor Billing verbunden ist.

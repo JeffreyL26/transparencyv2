@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * Eigener Debug-DataStore (CLAUDE.md §13.2): bewusst getrennt vom Produktiv-Store
- * „fxlens" aus [com.jbateam.scanconvert.data.Prefs] — der Override-Zustand soll den
+ * „scanconvert" aus [com.jbateam.scanconvert.data.Prefs] — der Override-Zustand soll den
  * echten Entitlement-Cache nie berühren.
  */
 private val Context.devDataStore by preferencesDataStore(name = "scanconvert_dev")

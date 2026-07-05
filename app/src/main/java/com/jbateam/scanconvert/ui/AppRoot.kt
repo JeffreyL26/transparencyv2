@@ -30,7 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.jbateam.scanconvert.BuildConfig
-import com.jbateam.scanconvert.FxLensApp
+import com.jbateam.scanconvert.ScanConvertApp
 import com.jbateam.scanconvert.MainViewModel
 import com.jbateam.scanconvert.R
 import com.jbateam.scanconvert.data.LocaleStore
@@ -93,7 +93,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
     var devOpen by remember { mutableStateOf(false) }
     val devSource = remember {
         if (BuildConfig.DEBUG) {
-            (context.applicationContext as? FxLensApp)?.container?.entitlementsSource as? DebugEntitlementSource
+            (context.applicationContext as? ScanConvertApp)?.container?.entitlementsSource as? DebugEntitlementSource
         } else null
     }
 

@@ -60,7 +60,7 @@ data class CreateRequest(val mode: CreateMode, val currency: String, val itemLab
  */
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val container = (app as FxLensApp).container
+    private val container = (app as ScanConvertApp).container
     private val prefs = container.prefs
     private val listsRepo = container.listsRepository
     private val ratesRepo = container.ratesRepository

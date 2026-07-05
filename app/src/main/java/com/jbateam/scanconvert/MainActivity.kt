@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
         // erneut erscheinen. Danach lädt das VM Ads NUR, wenn erlaubt, nicht werbefrei
         // und nicht in der ersten Session (§5/§11).
         if (savedInstanceState == null) {
-            val container = (application as FxLensApp).container
+            val container = (application as ScanConvertApp).container
             lifecycleScope.launch {
                 val launchNo = container.prefs.incrementLaunchCount()
                 container.consentManager.gatherConsent(this@MainActivity) { canRequestAds ->

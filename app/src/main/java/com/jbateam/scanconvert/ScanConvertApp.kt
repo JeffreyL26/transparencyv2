@@ -17,7 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-class FxLensApp : Application() {
+class ScanConvertApp : Application() {
     lateinit var container: AppContainer
         private set
 
@@ -35,7 +35,7 @@ class AppContainer(app: Application) {
 
     val prefs = Prefs(app)
     val ratesRepository = RatesRepository(app)
-    private val db = Room.databaseBuilder(app, FxDatabase::class.java, "fxlens.db")
+    private val db = Room.databaseBuilder(app, FxDatabase::class.java, "scanconvert.db")
         .addMigrations(MIGRATION_1_2)
         .build()
     val listsRepository = ListsRepository(db.listsDao())

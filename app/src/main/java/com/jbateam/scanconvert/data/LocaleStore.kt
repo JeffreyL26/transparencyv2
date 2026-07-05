@@ -12,7 +12,7 @@ import java.util.Locale
  * sonst Englisch. Deutsche Geräte landen so automatisch auf Deutsch.
  */
 object LocaleStore {
-    private const val PREFS = "fxlens_locale"
+    private const val PREFS = "scanconvert_locale"
     private const val KEY = "lang"
 
     /** Wählbare Sprachen (Reihenfolge = Anzeige im Sprach-Sheet). */
