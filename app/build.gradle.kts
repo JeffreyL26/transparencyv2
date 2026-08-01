@@ -31,8 +31,8 @@ android {
         applicationId = "com.jbateam.scanconvert"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.0"
 
         // AdMob-App-ID ins Manifest (Pflicht-Meta-data, sonst Crash beim Start).
         manifestPlaceholders["admobAppId"] = admobAppId
