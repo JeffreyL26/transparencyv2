@@ -291,6 +291,35 @@ val IcPinFilled: ImageVector by lazy {
     builder("IcPinFilled").apply { pinBody(filled = true) }.build()
 }
 
+/** Galerie-Bild (Foto-Scan): Rahmen + Sonne + Bergsilhouette (1.9). */
+val IcImage: ImageVector by lazy {
+    builder("IcImage").apply {
+        strokePath(1.9f) {
+            moveTo(5f, 4f)
+            horizontalLineTo(19f)
+            arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = 2f, dy1 = 2f)
+            verticalLineTo(18f)
+            arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = -2f, dy1 = 2f)
+            horizontalLineTo(5f)
+            arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = -2f, dy1 = -2f)
+            verticalLineTo(6f)
+            arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, dx1 = 2f, dy1 = -2f)
+            close()
+        }
+        strokePath(1.9f) {
+            moveTo(3.5f, 16.5f)
+            lineTo(9f, 11f)
+            lineTo(13.5f, 15.5f)
+            moveTo(11.5f, 13.5f)
+            lineTo(15f, 10f)
+            lineTo(20.5f, 15.5f)
+        }
+        fillPath {
+            circle(9f, 8f, 1.4f)
+        }
+    }.build()
+}
+
 /** Tastatur (manuelle Eingabe): Gehäuse + Tastenreihen als Punkte + Leertaste (1.9). */
 val IcKeyboard: ImageVector by lazy {
     builder("IcKeyboard").apply {

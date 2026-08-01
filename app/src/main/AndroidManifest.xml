@@ -8,6 +8,16 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- In-App-Galerie (Foto-Scan): nur Bild-Medien lesen. Ab Android 13 die
+         granularen Foto-Permissions; darunter READ_EXTERNAL_STORAGE (bis API 32).
+         READ_MEDIA_VISUAL_USER_SELECTED erlaubt die „Ausgewählte Fotos“-Teilfreigabe
+         (Android 14+). -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <!-- AdMob: zusätzlich in der Play-Console-Data-Safety deklarieren (§8.2). -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 

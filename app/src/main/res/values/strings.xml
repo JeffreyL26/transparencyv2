@@ -155,6 +155,25 @@
     <!-- Manueller Betragseingabe -->
     <string name="manual_input_title">Betrag umrechnen</string>
 
+    <!-- Galerie-Foto-Scan -->
+    <string name="gallery_title">Galerie</string>
+    <string name="gallery_loading">Galerie wird geladen …</string>
+    <string name="gallery_empty">Keine Fotos gefunden</string>
+    <string name="gallery_all_photos">Alle Fotos</string>
+    <string name="gallery_partial_access">Nur ausgewählte Fotos sind freigegeben.</string>
+    <string name="gallery_manage_access">Verwalten</string>
+    <string name="gallery_permission_title">Zugriff auf deine Fotos</string>
+    <string name="gallery_permission_body">Erlaube den Zugriff auf deine Galerie, um Fotos zu wählen und Preise darauf zu scannen.</string>
+    <string name="gallery_permission_cta">Zugriff erlauben</string>
+    <string name="gallery_scanning">Foto wird gescannt …</string>
+    <string name="gallery_scan_error">Foto konnte nicht gescannt werden</string>
+    <string name="overlay_title">Betrag</string>
+    <string name="overlay_remove">Entfernen</string>
+    <string name="add_all_to_list">Alle hinzufügen (%1$d)</string>
+    <string name="add_all_title">Alle zu Liste hinzufügen</string>
+    <string name="add_all_count">%1$d Beträge</string>
+    <string name="toast_added_n">%1$d zu „%2$s" hinzugefügt</string>
+
     <!-- Rechtliche Links -->
     <string name="privacy_url" translatable="false">https://jba-team.com/privacy.html</string>
     <string name="terms_url" translatable="false">https://jba-team.com/terms.html</string>

@@ -33,6 +33,8 @@ import com.jbateam.scanconvert.domain.TravelList
 import com.jbateam.scanconvert.domain.convert
 import com.jbateam.scanconvert.domain.total
 import com.jbateam.scanconvert.scan.Detection
+import com.jbateam.scanconvert.scan.PhotoDetection
+import com.jbateam.scanconvert.scan.PhotoScanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -399,6 +401,116 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return kotlin.math.abs(a - b) <= CLUSTER_TOL * scale
     }
 
+    // ---------- Galerie-Foto-Scan (§Galerie) ----------
+    /** In-App-Galerie sichtbar (Alben + Foto-Grid). */
+    var galleryOpen by mutableStateOf(false)
+        private set
+
+    /** Laufender/abgeschlossener Foto-Scan (null = kein Foto geöffnet). */
+    var photoScan by mutableStateOf<PhotoScanUi?>(null)
+        private set
+
+    private var photoScanJob: Job? = null
+
+    fun openGallery() {
+        galleryOpen = true
+    }
+
+    fun closeGallery() {
+        photoScanJob?.cancel()
+        photoScan = null
+        galleryOpen = false
+    }
+
+    /** Foto gewählt: anzeigen und im Hintergrund scannen (Bitmap + OCR + Preise). */
+    fun openPhoto(uri: Uri) {
+        photoScanJob?.cancel()
+        photoScan = PhotoScanUi(uri = uri, status = PhotoScanStatus.LOADING)
+        photoScanJob = viewModelScope.launch {
+            val result = runCatching { PhotoScanner.scan(getApplication(), uri) }
+            // Nur übernehmen, wenn der Nutzer nicht längst ein anderes Foto geöffnet hat.
+            if (photoScan?.uri != uri) return@launch
+            result.fold(
+                onSuccess = { r ->
+                    photoScan = PhotoScanUi(
+                        uri = uri,
+                        bitmap = r.bitmap,
+                        detections = r.detections,
+                        status = PhotoScanStatus.DONE,
+                    )
+                },
+                onFailure = {
+                    photoScan = PhotoScanUi(uri = uri, status = PhotoScanStatus.ERROR)
+                },
+            )
+        }
+    }
+
+    /** Zurück zur Galerie (Foto-Screen schließen). */
+    fun closePhoto() {
+        photoScanJob?.cancel()
+        photoScan = null
+    }
+
+    /** Overlay entfernen — die Zahl soll nicht übernommen werden. */
+    fun removePhotoDetection(id: Int) {
+        val s = photoScan ?: return
+        photoScan = s.copy(detections = s.detections.filterNot { it.id == id })
+    }
+
+    /** Falsch erkannten Rohwert eines Overlays händisch korrigieren. */
+    fun setPhotoDetectionValue(id: Int, value: Double) {
+        val s = photoScan ?: return
+        photoScan = s.copy(
+            detections = s.detections.map { if (it.id == id) it.copy(value = value) else it }
+        )
+    }
+
+    /** Add-Flow aus dem Foto-Modus — ohne das Kamera-Lock-Gate von [openAdd]. */
+    fun openAddFromPhoto(raw: Double) {
+        addRaw = raw
+        addOpen = true
+    }
+
+    /** „Alle zu Liste hinzufügen“-Sheet. */
+    var addAllOpen by mutableStateOf(false)
+        private set
+
+    fun openAddAll() {
+        if (photoScan?.detections?.isNotEmpty() == true) addAllOpen = true
+    }
+
+    fun closeAddAll() {
+        addAllOpen = false
+    }
+
+    /** Alle verbliebenen Overlays als Positionen in eine bestehende Liste übernehmen. */
+    fun addAllToExisting(listId: String) {
+        val dets = photoScan?.detections.orEmpty()
+        val list = lists.value.find { it.id == listId } ?: return
+        if (dets.isEmpty()) return
+        viewModelScope.launch {
+            insertDetections(dets, listId, list.currency)
+            addAllOpen = false
+            showToast(str(R.string.toast_added_n, dets.size, list.name))
+        }
+    }
+
+    /** Positionen in Erkennungs-Reihenfolge einfügen (ts gestaffelt wie beim Seed). */
+    private suspend fun insertDetections(dets: List<PhotoDetection>, listId: String, currency: String) {
+        val now = System.currentTimeMillis()
+        dets.forEachIndexed { i, d ->
+            listsRepo.addItem(
+                listId,
+                ListItem(
+                    id = uid(), raw = d.value, from = from,
+                    value = convert(d.value, from, currency, rates.value.rates),
+                    ts = now + i,
+                ),
+            )
+        }
+    }
+
     // ---------- Sheets & Panel ----------
     /** Welcher erkannte Rohwert gerade hinzugefügt wird (eine der gestapelten Zeilen). */
     var addRaw by mutableStateOf<Double?>(null)
@@ -431,6 +543,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun startCreate(mode: CreateMode, itemLabel: String? = null) {
         if (mode == CreateMode.ADD) addOpen = false
+        if (mode == CreateMode.ADD_ALL) addAllOpen = false
         creating = CreateRequest(mode, to, itemLabel?.trim()?.takeIf { it.isNotEmpty() })
     }
 
@@ -486,22 +599,33 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun doCreate(name: String, currency: String, budget: Double?) {
         val req = creating ?: return
         viewModelScope.launch {
-            if (req.mode == CreateMode.ADD) {
-                val raw = addRaw
-                val first = raw?.let {
-                    ListItem(
-                        id = uid(), raw = it, from = from,
-                        value = convert(it, from, currency, rates.value.rates),
-                        ts = System.currentTimeMillis(),
-                        label = req.itemLabel,
-                    )
+            when (req.mode) {
+                CreateMode.ADD -> {
+                    val raw = addRaw
+                    val first = raw?.let {
+                        ListItem(
+                            id = uid(), raw = it, from = from,
+                            value = convert(it, from, currency, rates.value.rates),
+                            ts = System.currentTimeMillis(),
+                            label = req.itemLabel,
+                        )
+                    }
+                    listsRepo.createList(name, currency, budget, first)
+                    showToast(str(R.string.toast_added_to, name))
                 }
-                listsRepo.createList(name, currency, budget, first)
-                showToast(str(R.string.toast_added_to, name))
-            } else {
-                val id = listsRepo.createList(name, currency, budget)
-                selectedListId = id
-                panelOpen = true
+                // Foto-Scan: alle verbliebenen Overlays als Positionen der neuen Liste.
+                CreateMode.ADD_ALL -> {
+                    val dets = photoScan?.detections.orEmpty()
+                    val id = listsRepo.createList(name, currency, budget)
+                    insertDetections(dets, id, currency)
+                    addAllOpen = false
+                    showToast(str(R.string.toast_added_n, dets.size, name))
+                }
+                CreateMode.PANEL -> {
+                    val id = listsRepo.createList(name, currency, budget)
+                    selectedListId = id
+                    panelOpen = true
+                }
             }
             prefs.addRecent(currency)
             creating = null
@@ -619,6 +743,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
 /** Welche Position gerade umbenannt wird (Screen 7). */
 data class EditItemTarget(val listId: String, val itemId: String)
+
+/** Zustand des Foto-Scans aus der In-App-Galerie. */
+enum class PhotoScanStatus { LOADING, DONE, ERROR }
+
+/**
+ * Ein geöffnetes Galerie-Foto samt Scan-Ergebnis: [bitmap] ist das angezeigte Bild,
+ * [detections] die verbliebenen Preis-Overlays (entfernte sind herausgefiltert,
+ * bearbeitete tragen den korrigierten Rohwert) in dessen Pixelkoordinaten.
+ */
+data class PhotoScanUi(
+    val uri: Uri,
+    val bitmap: android.graphics.Bitmap? = null,
+    val detections: List<PhotoDetection> = emptyList(),
+    val status: PhotoScanStatus = PhotoScanStatus.LOADING,
+)
 
 /** API-Codes alphabetisch, ohne ausgeblendete Währungen (§9). */
 private fun visibleCodes(codes: Set<String>): List<String> =

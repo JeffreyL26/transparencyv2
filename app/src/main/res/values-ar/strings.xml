@@ -143,4 +143,26 @@
     <string name="export_creating">جارٍ إنشاء PDF …</string>
     <string name="export_failed">فشل التصدير</string>
     <string name="restore_started">جارٍ استعادة المشتريات …</string>
+
+    <!-- إدخال المبلغ يدويًا -->
+    <string name="manual_input_title">تحويل المبلغ</string>
+
+    <!-- مسح صورة من المعرض -->
+    <string name="gallery_title">المعرض</string>
+    <string name="gallery_loading">جارٍ تحميل المعرض …</string>
+    <string name="gallery_empty">لا توجد صور</string>
+    <string name="gallery_all_photos">كل الصور</string>
+    <string name="gallery_partial_access">الصور المحددة فقط متاحة.</string>
+    <string name="gallery_manage_access">إدارة</string>
+    <string name="gallery_permission_title">الوصول إلى صورك</string>
+    <string name="gallery_permission_body">اسمح بالوصول إلى معرضك لاختيار الصور ومسح الأسعار عليها.</string>
+    <string name="gallery_permission_cta">السماح بالوصول</string>
+    <string name="gallery_scanning">جارٍ مسح الصورة …</string>
+    <string name="gallery_scan_error">تعذّر مسح الصورة</string>
+    <string name="overlay_title">المبلغ</string>
+    <string name="overlay_remove">إزالة</string>
+    <string name="add_all_to_list">إضافة الكل (%1$d)</string>
+    <string name="add_all_title">إضافة الكل إلى القائمة</string>
+    <string name="add_all_count">%1$d مبالغ</string>
+    <string name="toast_added_n">تمت إضافة %1$d إلى „%2$s"</string>
 </resources>

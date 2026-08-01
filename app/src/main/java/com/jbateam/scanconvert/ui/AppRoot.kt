@@ -4,7 +4,9 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,11 +47,15 @@ import com.jbateam.scanconvert.ui.screens.AddToListSheet
 import com.jbateam.scanconvert.ui.screens.CreateListSheet
 import com.jbateam.scanconvert.ui.screens.CustomRateSheet
 import com.jbateam.scanconvert.ui.screens.DevSheet
+import com.jbateam.scanconvert.ui.screens.AddAllSheet
 import com.jbateam.scanconvert.ui.screens.EdgeTab
 import com.jbateam.scanconvert.ui.screens.EditItemSheet
 import com.jbateam.scanconvert.ui.screens.EditListSheet
+import com.jbateam.scanconvert.ui.screens.GalleryButton
+import com.jbateam.scanconvert.ui.screens.GalleryScreen
 import com.jbateam.scanconvert.ui.screens.GlassMenu
 import com.jbateam.scanconvert.ui.screens.LanguageButton
+import com.jbateam.scanconvert.ui.screens.PhotoScanScreen
 import com.jbateam.scanconvert.ui.screens.LanguageSheet
 import com.jbateam.scanconvert.ui.screens.ListsPanel
 import com.jbateam.scanconvert.ui.screens.OnboardingScreen
@@ -69,7 +75,14 @@ import kotlinx.coroutines.launch
  * Onboarding (z70) → Toast (z80).
  */
 @Composable
-fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (String) -> Unit = {}) {
+fun AppRoot(
+    vm: MainViewModel,
+    hasCameraPermission: Boolean,
+    hasMediaPermission: Boolean = false,
+    mediaPartialAccess: Boolean = false,
+    onRequestMediaPermission: () -> Unit = {},
+    onSetLanguage: (String) -> Unit = {},
+) {
     val rates by vm.rates.collectAsState()
     val lists by vm.lists.collectAsState()
     val pins by vm.pins.collectAsState()
@@ -99,7 +112,8 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
 
     val overlayOpen = vm.picker != null || vm.addOpen || vm.creating != null || vm.panelOpen ||
         vm.customOpen || langOpen || vm.paywallOpen != null || vm.settingsOpen ||
-        manualInputOpen || (BuildConfig.DEBUG && devOpen)
+        manualInputOpen || vm.galleryOpen || vm.photoScan != null || vm.addAllOpen ||
+        (BuildConfig.DEBUG && devOpen)
 
     // Fertiger CSV-Export: Teilen-Dialog starten, dann State leeren (§6.4).
     val shareIntent = vm.pendingShare
@@ -124,10 +138,13 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
 
     FxTheme {
         Box(Modifier.fillMaxSize().background(Color(0xFF14110D))) {
-            // 1. Kamera (CameraX-Preview, Vollbild)
+            // 1. Kamera (CameraX-Preview, Vollbild). Analyse pausiert hinter dem Panel
+            // sowie hinter der opaken Galerie/Foto-Ansicht (kein Akkuverbrauch, kein
+            // Lock-Übergang, während der Nutzer ein Foto scannt).
             CameraScanPreview(
                 enabled = hasCameraPermission && onboarded == true,
-                analyzeActive = vm.scanPhase is ScanPhase.Scanning && !vm.panelOpen && onboarded == true,
+                analyzeActive = vm.scanPhase is ScanPhase.Scanning && !vm.panelOpen &&
+                    !vm.galleryOpen && vm.photoScan == null && onboarded == true,
                 onValues = vm::onAnalyzerValues,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -186,13 +203,18 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                         .navigationBarsPadding()
                         .padding(start = 18.dp, bottom = 22.dp),
                 )
-                ManualInputButton(
-                    onClick = { manualInputOpen = true },
+                // Rechts unten gestapelt: Galerie-Foto-Scan über der manuellen Eingabe.
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .navigationBarsPadding()
                         .padding(end = 18.dp, bottom = 22.dp),
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    GalleryButton(onClick = vm::openGallery)
+                    ManualInputButton(onClick = { manualInputOpen = true })
+                }
             }
 
             // Währungs-Picker (Screen 3)
@@ -221,21 +243,6 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                 )
             }
 
-            // „Zu Liste hinzufügen" (Screen 4)
-            if (vm.addOpen) {
-                val raw = vm.addRaw ?: 0.0
-                AddToListSheet(
-                    from = vm.from,
-                    to = vm.to,
-                    raw = raw,
-                    rates = rates.rates,
-                    lists = lists.filter { it.currency == vm.to },
-                    onAdd = { id, label -> vm.addToExisting(id, label) },
-                    onNew = { label -> vm.requestCreateList(CreateMode.ADD, label) },
-                    onClose = vm::closeAdd,
-                )
-            }
-
             // Listen-Panel (Screens 6 + 7, z60)
             ListsPanel(
                 show = vm.panelOpen,
@@ -256,6 +263,55 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                 onEditItem = vm::startEditItem,
                 modifier = Modifier.fillMaxSize(),
             )
+
+            // In-App-Galerie (z62 — über dem Panel, unter den Sheets). Foto offen → Galerie
+            // bleibt darunter erhalten (Zurück kehrt zur Foto-Auswahl zurück).
+            if (vm.galleryOpen) {
+                GalleryScreen(
+                    hasPermission = hasMediaPermission,
+                    partialAccess = mediaPartialAccess,
+                    onRequestPermission = onRequestMediaPermission,
+                    onPickPhoto = { photo -> vm.openPhoto(photo.uri) },
+                    onClose = vm::closeGallery,
+                )
+            }
+
+            // Foto-Scan mit positionierten Preis-Overlays (z63 — über der Galerie).
+            vm.photoScan?.let { scan ->
+                PhotoScanScreen(vm = vm, scan = scan)
+            }
+
+            // „Zu Liste hinzufügen" (Screen 4) — vom Kamera-Scan UND vom Foto-Overlay.
+            // Nach dem Foto-Layer gerendert, damit es beim Foto-Add darüber liegt.
+            if (vm.addOpen) {
+                val raw = vm.addRaw ?: 0.0
+                AddToListSheet(
+                    from = vm.from,
+                    to = vm.to,
+                    raw = raw,
+                    rates = rates.rates,
+                    lists = lists.filter { it.currency == vm.to },
+                    onAdd = { id, label -> vm.addToExisting(id, label) },
+                    onNew = { label -> vm.requestCreateList(CreateMode.ADD, label) },
+                    onClose = vm::closeAdd,
+                )
+            }
+
+            // „Alle zu Liste hinzufügen" (z65 — über dem Foto-Screen)
+            if (vm.addAllOpen) {
+                vm.photoScan?.let { scan ->
+                    AddAllSheet(
+                        to = vm.to,
+                        from = vm.from,
+                        detections = scan.detections,
+                        rates = rates.rates,
+                        lists = lists.filter { it.currency == vm.to },
+                        onAddAll = { id -> vm.addAllToExisting(id) },
+                        onNew = { vm.requestCreateList(CreateMode.ADD_ALL) },
+                        onClose = vm::closeAddAll,
+                    )
+                }
+            }
 
             // „Neue Liste" (Screen 5, z65 — über dem Panel)
             vm.creating?.let { req ->

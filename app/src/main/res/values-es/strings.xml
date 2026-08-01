@@ -149,4 +149,26 @@
     <string name="export_creating">Creando PDF …</string>
     <string name="export_failed">Error al exportar</string>
     <string name="restore_started">Restaurando compras …</string>
+
+    <!-- Entrada manual de importe -->
+    <string name="manual_input_title">Convertir importe</string>
+
+    <!-- Escaneo de foto de galería -->
+    <string name="gallery_title">Galería</string>
+    <string name="gallery_loading">Cargando galería …</string>
+    <string name="gallery_empty">No se encontraron fotos</string>
+    <string name="gallery_all_photos">Todas las fotos</string>
+    <string name="gallery_partial_access">Solo se han compartido fotos seleccionadas.</string>
+    <string name="gallery_manage_access">Gestionar</string>
+    <string name="gallery_permission_title">Acceso a tus fotos</string>
+    <string name="gallery_permission_body">Permite el acceso a tu galería para elegir fotos y escanear precios en ellas.</string>
+    <string name="gallery_permission_cta">Permitir acceso</string>
+    <string name="gallery_scanning">Escaneando foto …</string>
+    <string name="gallery_scan_error">No se pudo escanear la foto</string>
+    <string name="overlay_title">Importe</string>
+    <string name="overlay_remove">Quitar</string>
+    <string name="add_all_to_list">Añadir todo (%1$d)</string>
+    <string name="add_all_title">Añadir todo a la lista</string>
+    <string name="add_all_count">%1$d importes</string>
+    <string name="toast_added_n">%1$d añadidos a „%2$s"</string>
 </resources>

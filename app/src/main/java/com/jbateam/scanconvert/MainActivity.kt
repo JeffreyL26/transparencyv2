@@ -10,12 +10,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.jbateam.scanconvert.data.LocaleStore
@@ -68,9 +72,33 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            // Foto-Medien-Zugriff für die In-App-Galerie. Nach der Anfrage sowie beim
+            // Rückkehr aus den System-Einstellungen (ON_START) neu auswerten.
+            var hasMedia by remember { mutableStateOf(MediaPermissions.hasFullAccess(this)) }
+            var mediaPartial by remember { mutableStateOf(MediaPermissions.hasPartialAccess(this)) }
+            fun refreshMedia() {
+                hasMedia = MediaPermissions.hasAnyAccess(this)
+                mediaPartial = MediaPermissions.hasPartialAccess(this)
+            }
+            val mediaLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestMultiplePermissions()
+            ) { refreshMedia() }
+
+            val lifecycleOwner = LocalLifecycleOwner.current
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_START) refreshMedia()
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+            }
+
             AppRoot(
                 vm = vm,
                 hasCameraPermission = hasCamera,
+                hasMediaPermission = hasMedia,
+                mediaPartialAccess = mediaPartial,
+                onRequestMediaPermission = { mediaLauncher.launch(MediaPermissions.requested()) },
                 onSetLanguage = { lang ->
                     LocaleStore.setLang(this@MainActivity, lang)
                     recreate()

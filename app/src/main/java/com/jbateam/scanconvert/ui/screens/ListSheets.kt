@@ -209,9 +209,9 @@ private fun SheetNote(to: String) {
     )
 }
 
-/** .list-row.new — gestrichelte „Neue …-Liste"-Zeile. */
+/** .list-row.new — gestrichelte „Neue …-Liste"-Zeile (auch vom Foto-Scan genutzt). */
 @Composable
-private fun DashedNewRow(text: String, onClick: () -> Unit) {
+internal fun DashedNewRow(text: String, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -275,7 +275,8 @@ fun CreateListSheet(
             }
 
             FieldLabel(stringResource(R.string.list_currency))
-            if (mode == CreateMode.ADD) {
+            // ADD und ADD_ALL kommen aus dem Scan-Kontext: Zielwährung ist fix.
+            if (mode != CreateMode.PANEL) {
                 FixedCurrencyField(currency)
             } else {
                 CurScroller(allCodes = suggested, selected = cur, onSelect = { cur = it })
@@ -285,7 +286,7 @@ fun CreateListSheet(
             BudgetField(value = budget, onValueChange = { budget = it }, currency = cur)
 
             PrimaryButton(
-                text = if (mode == CreateMode.ADD) stringResource(R.string.create_and_add) else stringResource(R.string.create_list),
+                text = if (mode != CreateMode.PANEL) stringResource(R.string.create_and_add) else stringResource(R.string.create_list),
                 enabled = name.trim().isNotEmpty(),
                 modifier = Modifier.padding(top = 6.dp),
                 onClick = { onCreate(name.trim(), cur, parseBudget(budget)) },

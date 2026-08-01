@@ -143,4 +143,26 @@
     <string name="export_creating">A criar PDF …</string>
     <string name="export_failed">Falha na exportação</string>
     <string name="restore_started">A restaurar compras …</string>
+
+    <!-- Entrada manual do montante -->
+    <string name="manual_input_title">Converter montante</string>
+
+    <!-- Leitura de foto da galeria -->
+    <string name="gallery_title">Galeria</string>
+    <string name="gallery_loading">A carregar galeria …</string>
+    <string name="gallery_empty">Nenhuma foto encontrada</string>
+    <string name="gallery_all_photos">Todas as fotos</string>
+    <string name="gallery_partial_access">Apenas as fotos selecionadas estão partilhadas.</string>
+    <string name="gallery_manage_access">Gerir</string>
+    <string name="gallery_permission_title">Acesso às tuas fotos</string>
+    <string name="gallery_permission_body">Permite o acesso à tua galeria para escolher fotos e ler preços nelas.</string>
+    <string name="gallery_permission_cta">Permitir acesso</string>
+    <string name="gallery_scanning">A ler foto …</string>
+    <string name="gallery_scan_error">Não foi possível ler a foto</string>
+    <string name="overlay_title">Montante</string>
+    <string name="overlay_remove">Remover</string>
+    <string name="add_all_to_list">Adicionar tudo (%1$d)</string>
+    <string name="add_all_title">Adicionar tudo à lista</string>
+    <string name="add_all_count">%1$d montantes</string>
+    <string name="toast_added_n">%1$d adicionados a „%2$s"</string>
 </resources>

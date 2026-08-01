@@ -45,6 +45,7 @@ import com.jbateam.scanconvert.domain.fmtRate
 import com.jbateam.scanconvert.ui.components.Flag
 import com.jbateam.scanconvert.ui.components.Ic
 import com.jbateam.scanconvert.ui.components.IcChat
+import com.jbateam.scanconvert.ui.components.IcImage
 import com.jbateam.scanconvert.ui.components.IcList
 import com.jbateam.scanconvert.ui.components.IcSwap
 import com.jbateam.scanconvert.ui.components.LiveDot
@@ -361,5 +362,22 @@ fun LanguageButton(
         contentAlignment = Alignment.Center,
     ) {
         Ic(IcChat, tint = Tokens.AccentDeep, modifier = Modifier.size(25.dp))
+    }
+}
+
+/** Runder Glas-Button mit Galerie-Icon — öffnet die In-App-Galerie (Foto-Scan). */
+@Composable
+fun GalleryButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(52.dp)
+            .shadow(10.dp, CircleShape)
+            .clip(CircleShape)
+            .background(Tokens.GlassStrong)
+            .border(1.dp, Color(0xA6FFFFFF), CircleShape)
+            .scaleClick(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Ic(IcImage, tint = Tokens.AccentDeep, modifier = Modifier.size(26.dp))
     }
 }

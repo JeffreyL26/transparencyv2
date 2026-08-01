@@ -9,8 +9,8 @@ import kotlin.math.hypot
 data class Detection(val value: Double, val cx: Float, val cy: Float, val h: Float)
 
 /** Uhrzeit (12:30) bzw. Datum (13.06.2026, 06/13/26) — werden nicht als Preis gewertet (§5). */
-private val TIME_RE = Regex("""\d{1,2}:\d{2}""")
-private val DATE_RE = Regex("""\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}""")
+internal val TIME_RE = Regex("""\d{1,2}:\d{2}""")
+internal val DATE_RE = Regex("""\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}""")
 
 /** Relative Toleranz, ab der zwei Werte als „gleich" gelten (OCR-Jitter). */
 private const val SIM_TOL = 0.012
@@ -82,7 +82,7 @@ fun pricesInRoi(text: Text?, roi: RectF): List<Detection> {
  * vor der ersten Ziffer (verwirft Wort-Ziffern wie „v2", „A4", „transparencyv2") und
  * höchstens eine kurze Einheit dahinter (z. B. „17°C", „50EUR").
  */
-private fun isNumericToken(s: String): Boolean {
+internal fun isNumericToken(s: String): Boolean {
     val firstDigit = s.indexOfFirst { it.isDigit() }
     if (firstDigit < 0) return false
     // Verwechselbare Glyphen zählen nicht als Buchstaben — sie sind mutmaßlich Ziffern

@@ -143,4 +143,26 @@
     <string name="export_creating">PDFを作成中 …</string>
     <string name="export_failed">エクスポートに失敗しました</string>
     <string name="restore_started">購入を復元しています …</string>
+
+    <!-- 金額の手動入力 -->
+    <string name="manual_input_title">金額を換算</string>
+
+    <!-- ギャラリー写真スキャン -->
+    <string name="gallery_title">ギャラリー</string>
+    <string name="gallery_loading">ギャラリーを読み込み中 …</string>
+    <string name="gallery_empty">写真が見つからないよ</string>
+    <string name="gallery_all_photos">すべての写真</string>
+    <string name="gallery_partial_access">選択した写真だけが共有されているよ。</string>
+    <string name="gallery_manage_access">管理</string>
+    <string name="gallery_permission_title">写真へのアクセス</string>
+    <string name="gallery_permission_body">ギャラリーへのアクセスを許可すると、写真を選んで価格をスキャンできるよ。</string>
+    <string name="gallery_permission_cta">アクセスを許可</string>
+    <string name="gallery_scanning">写真をスキャン中 …</string>
+    <string name="gallery_scan_error">写真をスキャンできなかったよ</string>
+    <string name="overlay_title">金額</string>
+    <string name="overlay_remove">削除</string>
+    <string name="add_all_to_list">すべて追加（%1$d）</string>
+    <string name="add_all_title">すべてリストに追加</string>
+    <string name="add_all_count">%1$d 件の金額</string>
+    <string name="toast_added_n">%1$d 件を「%2$s」に追加したよ</string>
 </resources>

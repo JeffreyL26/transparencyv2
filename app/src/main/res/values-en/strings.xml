@@ -149,4 +149,26 @@
     <string name="export_creating">Creating PDF …</string>
     <string name="export_failed">Export failed</string>
     <string name="restore_started">Restoring purchases …</string>
+
+    <!-- Manual amount entry -->
+    <string name="manual_input_title">Convert amount</string>
+
+    <!-- Gallery photo scan -->
+    <string name="gallery_title">Gallery</string>
+    <string name="gallery_loading">Loading gallery …</string>
+    <string name="gallery_empty">No photos found</string>
+    <string name="gallery_all_photos">All photos</string>
+    <string name="gallery_partial_access">Only selected photos are shared.</string>
+    <string name="gallery_manage_access">Manage</string>
+    <string name="gallery_permission_title">Access to your photos</string>
+    <string name="gallery_permission_body">Allow access to your gallery to pick photos and scan prices on them.</string>
+    <string name="gallery_permission_cta">Allow access</string>
+    <string name="gallery_scanning">Scanning photo …</string>
+    <string name="gallery_scan_error">Couldn\'t scan the photo</string>
+    <string name="overlay_title">Amount</string>
+    <string name="overlay_remove">Remove</string>
+    <string name="add_all_to_list">Add all (%1$d)</string>
+    <string name="add_all_title">Add all to list</string>
+    <string name="add_all_count">%1$d amounts</string>
+    <string name="toast_added_n">%1$d added to „%2$s"</string>
 </resources>

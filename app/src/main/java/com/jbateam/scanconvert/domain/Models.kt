@@ -26,8 +26,11 @@ fun TravelList.total(): Double = items.sumOf { it.value }
 /** Welcher Chip im Glas-Menü den Picker geöffnet hat. */
 enum class PickerSlot { FROM, TO }
 
-/** Kontext des „Neue Liste“-Sheets: aus dem Add-Flow (Währung fix) oder aus dem Panel. */
-enum class CreateMode { ADD, PANEL }
+/**
+ * Kontext des „Neue Liste“-Sheets: aus dem Add-Flow (Währung fix), aus dem Panel
+ * oder aus dem Foto-Scan „Alle hinzufügen“-Flow (Währung fix, alle Overlays als Positionen).
+ */
+enum class CreateMode { ADD, PANEL, ADD_ALL }
 
 /** Scan-State-Maschine (§12): scanning → locked. `raws` = erkannte Zahlen in Lesereihenfolge. */
 sealed interface ScanPhase {
