@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -54,6 +55,13 @@ import com.jbateam.scanconvert.ui.theme.Motion
 import com.jbateam.scanconvert.ui.theme.Tokens
 import com.jbateam.scanconvert.ui.theme.Txt
 import com.jbateam.scanconvert.ui.theme.motionTween
+
+/**
+ * Adaptive Launcher-Icons zeichnen auf einer 108-dp-Flaeche, von der nur die inneren
+ * 72 dp im Masken-Viewport sichtbar sind — der Launcher zoomt also um 108/72 hinein.
+ * Ohne diesen Faktor erscheint das Logo auf der Kachel kleiner als auf dem Homescreen.
+ */
+private const val ADAPTIVE_ICON_SCALE = 108f / 72f
 
 /**
  * Screen 1 — Onboarding (§13): Favoriten wählen, max 4, persistent.
@@ -111,12 +119,12 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
             Image(
                 painter = painterResource(R.drawable.ic_launcher_background),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().scale(ADAPTIVE_ICON_SCALE),
             )
             Image(
                 painter = painterResource(R.mipmap.ic_launcher_fg),
                 contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().scale(ADAPTIVE_ICON_SCALE),
             )
         }
 
