@@ -31,7 +31,7 @@ android {
         applicationId = "com.jbateam.scanconvert"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0.0"
 
         // AdMob-App-ID ins Manifest (Pflicht-Meta-data, sonst Crash beim Start).
@@ -39,6 +39,15 @@ android {
         // Ad-Unit-IDs als BuildConfig-Felder (Test-Defaults).
         buildConfigField("String", "ADMOB_NATIVE_UNIT_ID", "\"$admobNativeUnitId\"")
         buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$admobRewardedUnitId\"")
+    }
+
+    // Play-Sprach-Splits aus: sonst liefert das Bundle nur die values-*-Ordner der
+    // Systemsprachen aus und der In-App-Sprachwechsler fällt auf values/ (Deutsch)
+    // zurück. Bei reinen String-Ressourcen ist der Größenzuwachs vernachlässigbar.
+    bundle {
+        language {
+            enableSplit = false
+        }
     }
 
     buildTypes {
