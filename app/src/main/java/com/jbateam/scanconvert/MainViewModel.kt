@@ -175,11 +175,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ---------- Session-State (nicht persistent, §7) ----------
+    // ---------- Währungspaar (persistent) ----------
+    // Abweichend vom Handoff (§7: Session-State) überlebt das Paar den App-Neustart —
+    // wer in Thailand scannt, will nach dem Schließen nicht wieder bei EUR→USD landen.
+    // Die Werte hier sind nur die Startwerte für den allerersten Start; danach setzt
+    // sie [restorePair] aus DataStore.
     var from by mutableStateOf("EUR")
         private set
     var to by mutableStateOf("USD")
         private set
+
+    /**
+     * true, sobald der Nutzer das Paar selbst geändert hat. Verhindert, dass die
+     * (asynchrone) Wiederherstellung eine Auswahl überschreibt, die in den wenigen
+     * Millisekunden bis zur ersten DataStore-Emission bereits getroffen wurde.
+     */
+    private var pairTouched = false
+
+    // ---------- Session-State (nicht persistent, §7) ----------
     var scanPhase by mutableStateOf<ScanPhase>(ScanPhase.Scanning)
         private set
     var picker by mutableStateOf<PickerSlot?>(null)
@@ -233,6 +246,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     init {
+        restorePair()
         viewModelScope.launch {
             // Seed nur beim allerersten Start — ein bewusst geleerter Stand bleibt leer (§6.1).
             if (!prefs.seeded.first()) {
@@ -289,7 +303,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun deleteCustom(code: String) {
-        viewModelScope.launch { prefs.setCustoms(customs.value.filterNot { it.code == code }) }
+        viewModelScope.launch {
+            prefs.setCustoms(customs.value.filterNot { it.code == code })
+            // Auswahl von der gelöschten Währung wegbewegen: für ihren Code gibt es
+            // keinen Kurs mehr (convert → 0). Ohne das bliebe der tote Code jetzt
+            // dauerhaft gespeichert, statt beim nächsten Start zu verschwinden.
+            if (from == code || to == code) {
+                val other = if (from == code) to else from
+                val fallback = CurrencyMeta.DEFAULT_PINNED.firstOrNull { it != other } ?: "EUR"
+                if (from == code) setPair(fallback, other) else setPair(other, fallback)
+            }
+        }
     }
 
     /** Eindeutiger Code: bereinigte Abkürzung, sonst „C1"…; kollidiert nie mit echten Codes. */
@@ -315,6 +339,29 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ---------- Währungswahl ----------
+    /**
+     * Stellt das zuletzt gewählte Paar aus DataStore wieder her. Läuft asynchron:
+     * bis zur ersten Emission zeigt das Glas-Menü kurz die Startwerte.
+     */
+    private fun restorePair() {
+        viewModelScope.launch {
+            val saved = prefs.currencyPair.first() ?: return@launch
+            val (f, t) = saved
+            if (!pairTouched && f != t) {
+                from = f
+                to = t
+            }
+        }
+    }
+
+    /** Einziger Schreibpfad für das Paar — hält State und DataStore zusammen. */
+    private fun setPair(newFrom: String, newTo: String) {
+        pairTouched = true
+        from = newFrom
+        to = newTo
+        viewModelScope.launch { prefs.setCurrencyPair(newFrom, newTo) }
+    }
+
     fun openPicker(slot: PickerSlot) {
         picker = slot
     }
@@ -326,16 +373,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Zeilen-Tap im Picker: wählen; wäre das Paar gleich, werden beide getauscht (§7). */
     fun choose(code: String) {
         when (picker) {
-            PickerSlot.FROM -> {
-                val oldFrom = from
-                from = code
-                if (code == to) to = oldFrom
-            }
-            PickerSlot.TO -> {
-                val oldTo = to
-                to = code
-                if (code == from) from = oldTo
-            }
+            PickerSlot.FROM -> setPair(code, if (code == to) from else to)
+            PickerSlot.TO -> setPair(if (code == from) to else from, code)
             null -> return
         }
         viewModelScope.launch { prefs.addRecent(code) }
@@ -345,9 +384,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun swap() {
         swapAngle += 180f
-        val f = from
-        from = to
-        to = f
+        setPair(to, from)
         rescan()
     }
 

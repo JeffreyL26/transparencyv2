@@ -18,7 +18,7 @@ optionalem **Budget** sammeln (laufende Reise-Rechnung).
 - **Live-Scan**: CameraX-Preview + ML Kit Text Recognition v2 (on-device), nur im Scan-ROI;
   `scanning → locked` nach ~1 s stabiler Erkennung, Tap auf den Rahmen scannt erneut
 - **Glas-Menü**: Von/Zu-Währungschips, federnder Swap (beide tauschen bei gleichem Paar),
-  Live-Kurszeile mit Puls-Indikator
+  Live-Kurszeile mit Puls-Indikator; das gewählte Paar überlebt den App-Neustart
 - **Währungs-Picker**: Suche über Code und Name, Pins (max 4) oben in fester Reihenfolge,
   übrige Währungen alphabetisch
 - **Listen**: nur Listen der Zielwährung beim Hinzufügen; Anlegen, Umbenennen,
@@ -26,8 +26,9 @@ optionalem **Budget** sammeln (laufende Reise-Rechnung).
 - **Live-Kurse**: [open.er-api.com](https://www.exchangerate-api.com/docs/free) (EUR-Basis,
   ~166 Währungen — Onboarding, Picker und Listen führen die komplette Liste), Datei-Cache,
   Offline-Fallback auf den letzten Stand bzw. die Demo-Kurse aus dem Handoff
-- **Persistenz**: Room (Listen + Positionen), DataStore (Pins, Onboarding-Flag);
-  Demo-Seed „USA Roadtrip“ / „Hongkong Reise“ beim ersten Start
+- **Persistenz**: Room (Listen + Positionen), DataStore (Pins, Onboarding-Flag,
+  zuletzt gewähltes Währungspaar); Demo-Seed „USA Roadtrip“ / „Hongkong Reise“
+  beim ersten Start
 
 ## Tech-Stack
 
