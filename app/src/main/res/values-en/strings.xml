@@ -149,4 +149,5 @@
     <string name="export_creating">Creating PDF …</string>
     <string name="export_failed">Export failed</string>
     <string name="restore_started">Restoring purchases …</string>
+    <string name="manual_input_title">Convert amount</string>
 </resources>

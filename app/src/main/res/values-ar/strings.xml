@@ -143,4 +143,5 @@
     <string name="export_creating">جارٍ إنشاء PDF …</string>
     <string name="export_failed">فشل التصدير</string>
     <string name="restore_started">جارٍ استعادة المشتريات …</string>
+    <string name="manual_input_title">تحويل المبلغ</string>
 </resources>

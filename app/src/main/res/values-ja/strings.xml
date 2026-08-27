@@ -143,4 +143,5 @@
     <string name="export_creating">PDFを作成中 …</string>
     <string name="export_failed">エクスポートに失敗しました</string>
     <string name="restore_started">購入を復元しています …</string>
+    <string name="manual_input_title">金額を換算</string>
 </resources>
