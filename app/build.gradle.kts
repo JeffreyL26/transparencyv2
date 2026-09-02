@@ -31,8 +31,8 @@ android {
         applicationId = "com.jbateam.scanconvert"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.0"
+        versionCode = 4
+        versionName = "1.0.1"
 
         // AdMob-App-ID ins Manifest (Pflicht-Meta-data, sonst Crash beim Start).
         manifestPlaceholders["admobAppId"] = admobAppId
@@ -109,4 +109,31 @@ dependencies {
     implementation(libs.billing.ktx)
     implementation(libs.play.services.ads)
     implementation(libs.user.messaging.platform)
+}
+
+// Release-Guard (CLAUDE.md §9.2): Bricht jeden Release-Build ab, sobald eine der
+// AdMob-IDs noch Googles Test-Publisher-ID enthält. Grund: adProp() fällt still
+// auf die Test-IDs zurück, wenn die Keys in local.properties fehlen — ein so
+// gebautes Bundle liefert im Store nur Test-Anzeigen aus. Debug-Builds und der
+// Gradle-Sync sind nicht betroffen (Prüfung erst bei Ausführung von preReleaseBuild).
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    doFirst {
+        val testPublisher = "3940256099942544"
+        val offenders = listOf(
+            "ADMOB_APP_ID" to admobAppId,
+            "ADMOB_NATIVE_UNIT_ID" to admobNativeUnitId,
+            "ADMOB_REWARDED_UNIT_ID" to admobRewardedUnitId,
+        ).filter { (_, value) -> value.contains(testPublisher) }.map { it.first }
+        if (offenders.isNotEmpty()) {
+            throw GradleException(
+                "Release-Build abgebrochen: AdMob-Test-IDs ($testPublisher) aktiv für " +
+                    "${offenders.joinToString(", ")}.\n" +
+                    "Erwartete Keys in local.properties (oder als Gradle-Property): " +
+                    "ADMOB_APP_ID, ADMOB_NATIVE_UNIT_ID, ADMOB_REWARDED_UNIT_ID " +
+                    "(Format ADMOB_APP_ID=ca-app-pub-…~…, Unit-IDs ca-app-pub-…/…; " +
+                    "keine Anführungszeichen, keine Leerzeichen um '=', keine BOM). " +
+                    "Siehe CLAUDE.md §9.2 und scripts/check-admob-ids.sh."
+            )
+        }
+    }
 }
