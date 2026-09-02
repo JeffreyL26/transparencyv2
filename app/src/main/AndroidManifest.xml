@@ -36,7 +36,7 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />
 
-        <!-- CSV-Export-Teilen (§6.4). -->
+        <!-- PDF-Export-Teilen (§6.4). -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
