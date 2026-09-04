@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ScanConvert - Travel Tool</string>
+    <string name="app_name">ScanConvert</string>
 
     <!-- ações comuns -->
     <string name="action_save">Guardar</string>
@@ -125,7 +125,7 @@
     <string name="product_vacation_name">Passe de férias de 7 dias</string>
     <string name="product_vacation_desc">Uma semana sem publicidade – ideal para uma viagem.</string>
     <string name="product_business_name">Pacote Business</string>
-    <string name="product_business_desc">Listas ilimitadas e exportação CSV.</string>
+    <string name="product_business_desc">Listas ilimitadas e exportação PDF.</string>
     <string name="product_full_name">Full Premium</string>
     <string name="product_full_desc">Sem publicidade, listas ilimitadas e exportação – tudo incluído.</string>
     <string name="settings_title">Definições</string>

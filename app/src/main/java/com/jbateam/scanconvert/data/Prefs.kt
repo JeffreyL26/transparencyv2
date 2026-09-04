@@ -26,6 +26,8 @@ class Prefs(private val context: Context) {
     private val seededKey = booleanPreferencesKey("scanconvert_seeded")
     private val recentsKey = stringPreferencesKey("scanconvert_recents")
     private val customsKey = stringPreferencesKey("scanconvert_customs")
+    private val pairFromKey = stringPreferencesKey("scanconvert_pair_from")
+    private val pairToKey = stringPreferencesKey("scanconvert_pair_to")
 
     // Entitlement-Cache (§6.1): Quelle der Wahrheit ist Play; der Cache liefert
     // sofortige UX offline / bevor Billing verbunden ist.
@@ -52,6 +54,23 @@ class Prefs(private val context: Context) {
         context.dataStore.edit { p ->
             val cur = p[recentsKey]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
             p[recentsKey] = (listOf(code) + cur.filterNot { it == code }).take(12).joinToString(",")
+        }
+    }
+
+    /**
+     * Zuletzt gewähltes Währungspaar (from, to) — null, solange noch nie eines
+     * gespeichert wurde (dann gelten die Startwerte des ViewModels).
+     */
+    val currencyPair: Flow<Pair<String, String>?> = context.dataStore.data.map { p ->
+        val f = p[pairFromKey]?.takeIf { it.isNotBlank() }
+        val t = p[pairToKey]?.takeIf { it.isNotBlank() }
+        if (f != null && t != null) f to t else null
+    }
+
+    suspend fun setCurrencyPair(from: String, to: String) {
+        context.dataStore.edit {
+            it[pairFromKey] = from
+            it[pairToKey] = to
         }
     }
 

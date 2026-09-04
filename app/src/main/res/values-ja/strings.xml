@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ScanConvert - Travel Tool</string>
+    <string name="app_name">ScanConvert</string>
 
     <!-- 共通アクション -->
     <string name="action_save">保存</string>
@@ -125,7 +125,7 @@
     <string name="product_vacation_name">7日間トラベルパス</string>
     <string name="product_vacation_desc">1週間広告なし――旅行にぴったり。</string>
     <string name="product_business_name">ビジネスパック</string>
-    <string name="product_business_desc">リスト無制限とCSVエクスポート。</string>
+    <string name="product_business_desc">リスト無制限とPDFエクスポート。</string>
     <string name="product_full_name">Full Premium</string>
     <string name="product_full_desc">広告なし、リスト無制限、エクスポート――すべて込み。</string>
     <string name="settings_title">設定</string>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ScanConvert - Travel Tool</string>
+    <string name="app_name">ScanConvert</string>
 
     <!-- common actions -->
     <string name="action_save">Save</string>
@@ -127,7 +127,7 @@
     <string name="product_vacation_name">7-day vacation pass</string>
     <string name="product_vacation_desc">One week ad-free – perfect for a trip.</string>
     <string name="product_business_name">Business pack</string>
-    <string name="product_business_desc">Unlimited lists and CSV export.</string>
+    <string name="product_business_desc">Unlimited lists and PDF export.</string>
     <string name="product_full_name">Full Premium</string>
     <string name="product_full_desc">Ad-free, unlimited lists and export – everything included.</string>
 

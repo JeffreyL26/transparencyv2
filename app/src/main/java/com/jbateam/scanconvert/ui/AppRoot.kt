@@ -115,7 +115,7 @@ fun AppRoot(
         manualInputOpen || vm.galleryOpen || vm.photoScan != null || vm.addAllOpen ||
         (BuildConfig.DEBUG && devOpen)
 
-    // Fertiger CSV-Export: Teilen-Dialog starten, dann State leeren (§6.4).
+    // Fertiger PDF-Export: Teilen-Dialog starten, dann State leeren (§6.4).
     val shareIntent = vm.pendingShare
     LaunchedEffect(shareIntent) {
         if (shareIntent != null) {

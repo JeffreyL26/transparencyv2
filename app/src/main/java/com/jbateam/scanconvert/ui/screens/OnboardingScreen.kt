@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -39,21 +42,32 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.jbateam.scanconvert.R
 import com.jbateam.scanconvert.data.CurrencyMeta
+import com.jbateam.scanconvert.ui.components.Field
+import com.jbateam.scanconvert.ui.components.FieldInput
 import com.jbateam.scanconvert.ui.components.Flag
 import com.jbateam.scanconvert.ui.components.Ic
 import com.jbateam.scanconvert.ui.components.IcCheck
+import com.jbateam.scanconvert.ui.components.IcSearch
 import com.jbateam.scanconvert.ui.components.PrimaryButton
 import com.jbateam.scanconvert.ui.components.scaleClick
 import com.jbateam.scanconvert.ui.theme.Motion
 import com.jbateam.scanconvert.ui.theme.Tokens
 import com.jbateam.scanconvert.ui.theme.Txt
 import com.jbateam.scanconvert.ui.theme.motionTween
+
+/**
+ * Adaptive Launcher-Icons zeichnen auf einer 108-dp-Flaeche, von der nur die inneren
+ * 72 dp im Masken-Viewport sichtbar sind — der Launcher zoomt also um 108/72 hinein.
+ * Ohne diesen Faktor erscheint das Logo auf der Kachel kleiner als auf dem Homescreen.
+ */
+private const val ADAPTIVE_ICON_SCALE = 108f / 72f
 
 /**
  * Screen 1 — Onboarding (§13): Favoriten wählen, max 4, persistent.
@@ -68,8 +82,20 @@ private val FeaturedOrder = listOf(
 @Composable
 fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
     var selection by remember { mutableStateOf(listOf<String>()) }
+    var q by remember { mutableStateOf("") }
     val orderedCodes = remember(allCodes) {
         FeaturedOrder.filter { it in allCodes } + allCodes.filterNot { it in FeaturedOrder }
+    }
+    // Suche über Code + Name wie im Picker (§13); ohne Eingabe bleibt die
+    // §6-Reihenfolge unverändert. Bereits Gewähltes bleibt selektiert, auch wenn
+    // es der Filter gerade ausblendet — der Zähler oben zeigt den Stand.
+    val query = q.trim().lowercase()
+    val shownCodes = remember(orderedCodes, query) {
+        if (query.isEmpty()) orderedCodes
+        else orderedCodes.filter { code ->
+            code.lowercase().contains(query) ||
+                CurrencyMeta.info(code).name.lowercase().contains(query)
+        }
     }
 
     fun toggle(code: String) {
@@ -97,6 +123,7 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
             .pointerInput(Unit) { } // Eingaben konsumieren — darunter liegt der Scanner
             .padding(start = 22.dp, end = 22.dp, top = 64.dp, bottom = 22.dp)
             .navigationBarsPadding()
+            .imePadding()
     ) {
         // App-Icon (adaptives Launcher-Icon: dunkler Hintergrund + neues Logo-Vordergrund
         // aus @mipmap/ic_launcher_fg), gerundet wie eine Launcher-Kachel — identisch zum
@@ -111,12 +138,12 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
             Image(
                 painter = painterResource(R.drawable.ic_launcher_background),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().scale(ADAPTIVE_ICON_SCALE),
             )
             Image(
                 painter = painterResource(R.mipmap.ic_launcher_fg),
                 contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().scale(ADAPTIVE_ICON_SCALE),
             )
         }
 
@@ -157,6 +184,15 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
             )
         }
 
+        Field(Modifier.padding(bottom = 12.dp)) {
+            Ic(IcSearch, tint = Tokens.Ink3, modifier = Modifier.size(18.dp))
+            FieldInput(
+                value = q,
+                onValueChange = { q = it },
+                placeholder = stringResource(R.string.search_placeholder),
+            )
+        }
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier
@@ -166,15 +202,29 @@ fun OnboardingScreen(allCodes: List<String>, onDone: (List<String>) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 12.dp),
         ) {
-            items(orderedCodes, key = { it }) { code ->
-                val selected = code in selection
-                val disabled = !selected && selection.size >= 4
-                OnboardingTile(
-                    code = code,
-                    selected = selected,
-                    disabled = disabled,
-                    onClick = { if (!disabled) toggle(code) },
-                )
+            if (shownCodes.isEmpty()) {
+                item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
+                    Txt(
+                        stringResource(R.string.no_hits, q),
+                        fontSize = 13.sp,
+                        color = Tokens.Ink2,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 24.dp),
+                    )
+                }
+            } else {
+                items(shownCodes, key = { it }) { code ->
+                    val selected = code in selection
+                    val disabled = !selected && selection.size >= 4
+                    OnboardingTile(
+                        code = code,
+                        selected = selected,
+                        disabled = disabled,
+                        onClick = { if (!disabled) toggle(code) },
+                    )
+                }
             }
         }
 

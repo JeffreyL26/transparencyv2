@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ScanConvert - Travel Tool</string>
+    <string name="app_name">ScanConvert</string>
 
     <!-- gemeinsame Aktionen -->
     <string name="action_save">حفظ</string>
@@ -125,7 +125,7 @@
     <string name="product_vacation_name">تصريح إجازة 7 أيام</string>
     <string name="product_vacation_desc">أسبوع بدون إعلانات – مثالي للرحلات.</string>
     <string name="product_business_name">حزمة الأعمال</string>
-    <string name="product_business_desc">قوائم غير محدودة وتصدير CSV.</string>
+    <string name="product_business_desc">قوائم غير محدودة وتصدير PDF.</string>
     <string name="product_full_name">Full Premium</string>
     <string name="product_full_desc">بدون إعلانات، قوائم غير محدودة وتصدير – كل شيء مشمول.</string>
     <string name="settings_title">الإعدادات</string>

@@ -31,8 +31,8 @@ android {
         applicationId = "com.jbateam.scanconvert"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.0"
+        versionCode = 5
+        versionName = "1.0.2"
 
         // AdMob-App-ID ins Manifest (Pflicht-Meta-data, sonst Crash beim Start).
         manifestPlaceholders["admobAppId"] = admobAppId
@@ -41,9 +41,22 @@ android {
         buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$admobRewardedUnitId\"")
     }
 
+    // Play-Sprach-Splits aus: sonst liefert das Bundle nur die values-*-Ordner der
+    // Systemsprachen aus und der In-App-Sprachwechsler fällt auf values/ (Deutsch)
+    // zurück. Bei reinen String-Ressourcen ist der Größenzuwachs vernachlässigbar.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: Play bemängelt fehlende Verschleierung ohne Minify. Keep-Regeln
+            // für die dadurch riskanten Stellen (Room, kotlinx.serialization) stehen
+            // mit Begründung in proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -100,4 +113,31 @@ dependencies {
     implementation(libs.billing.ktx)
     implementation(libs.play.services.ads)
     implementation(libs.user.messaging.platform)
+}
+
+// Release-Guard (CLAUDE.md §9.2): Bricht jeden Release-Build ab, sobald eine der
+// AdMob-IDs noch Googles Test-Publisher-ID enthält. Grund: adProp() fällt still
+// auf die Test-IDs zurück, wenn die Keys in local.properties fehlen — ein so
+// gebautes Bundle liefert im Store nur Test-Anzeigen aus. Debug-Builds und der
+// Gradle-Sync sind nicht betroffen (Prüfung erst bei Ausführung von preReleaseBuild).
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    doFirst {
+        val testPublisher = "3940256099942544"
+        val offenders = listOf(
+            "ADMOB_APP_ID" to admobAppId,
+            "ADMOB_NATIVE_UNIT_ID" to admobNativeUnitId,
+            "ADMOB_REWARDED_UNIT_ID" to admobRewardedUnitId,
+        ).filter { (_, value) -> value.contains(testPublisher) }.map { it.first }
+        if (offenders.isNotEmpty()) {
+            throw GradleException(
+                "Release-Build abgebrochen: AdMob-Test-IDs ($testPublisher) aktiv für " +
+                    "${offenders.joinToString(", ")}.\n" +
+                    "Erwartete Keys in local.properties (oder als Gradle-Property): " +
+                    "ADMOB_APP_ID, ADMOB_NATIVE_UNIT_ID, ADMOB_REWARDED_UNIT_ID " +
+                    "(Format ADMOB_APP_ID=ca-app-pub-…~…, Unit-IDs ca-app-pub-…/…; " +
+                    "keine Anführungszeichen, keine Leerzeichen um '=', keine BOM). " +
+                    "Siehe CLAUDE.md §9.2 und scripts/check-admob-ids.sh."
+            )
+        }
+    }
 }
