@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.jbateam.scanconvert.BuildConfig
 import com.jbateam.scanconvert.R
 import com.jbateam.scanconvert.domain.ScanPhase
 import com.jbateam.scanconvert.domain.convert
@@ -67,6 +68,7 @@ import com.jbateam.scanconvert.domain.fmtNum
 import com.jbateam.scanconvert.domain.fmtPlain
 import com.jbateam.scanconvert.domain.fmtRate
 import com.jbateam.scanconvert.domain.parseAmount
+import com.jbateam.scanconvert.ui.components.BannerAdCard
 import com.jbateam.scanconvert.ui.components.Ic
 import com.jbateam.scanconvert.ui.components.IcArrow
 import com.jbateam.scanconvert.ui.components.IcCheck
@@ -652,6 +654,8 @@ fun ManualInputSheet(
     to: String,
     rates: Map<String, Double>,
     onClose: () -> Unit,
+    isAdFree: Boolean = true,
+    adsReady: Boolean = false,
 ) {
     var text by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -659,7 +663,10 @@ fun ManualInputSheet(
     val amount = remember(text) { parseAmount(text) ?: 0.0 }
     val conv = if (amount > 0) convert(amount, from, to, rates) else null
 
-    SheetScaffold(onDismiss = onClose) {
+    // Tastatur ist durch den Auto-Fokus praktisch immer offen und sitzt direkt unter
+    // dem Sheet — runde Ecken dort würden gegen die eckige Tastaturkante eine Lücke
+    // aufreißen, statt „einzufließen".
+    SheetScaffold(onDismiss = onClose, bottomRadius = 0.dp) {
         SheetTitle(stringResource(R.string.manual_input_title))
         Row(
             Modifier
@@ -737,6 +744,17 @@ fun ManualInputSheet(
                     maxLines = 1,
                 )
             }
+        }
+        // Werbefläche unter der Eingabe — nur ab dem 2. App-Start und nie für
+        // werbefreie Nutzer (§5/§11, wie beim Native-Ad in der Listen-Übersicht).
+        if (!isAdFree && adsReady) {
+            BannerAdCard(
+                adUnitId = BuildConfig.ADMOB_BANNER_UNIT_ID,
+                adLabel = stringResource(R.string.ad_label),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 14.dp),
+            )
         }
     }
 }

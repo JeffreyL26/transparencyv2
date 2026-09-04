@@ -36,6 +36,7 @@ import com.jbateam.scanconvert.scan.Detection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -146,6 +147,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var privacyOptionsRequired by mutableStateOf(false)
         private set
 
+    private val _adsReady = MutableStateFlow(false)
+    /**
+     * true, sobald Consent/Session/adFree das Laden von Ads erlauben (dasselbe Gate wie
+     * für Native/Rewarded) — steuert z. B. den Banner im ManualInputSheet, der sich
+     * (anders als NativeAd) selbst lädt statt über einen Loader-Flow bereitzustehen.
+     */
+    val adsReady: StateFlow<Boolean> = _adsReady
+
     /**
      * Wird von [MainActivity] nach dem Consent-Flow aufgerufen. Lädt Ads NUR, wenn
      * Consent erlaubt, der Nutzer nicht werbefrei ist und es nicht die erste Session
@@ -154,6 +163,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun onConsentResolved(canRequestAds: Boolean, firstSession: Boolean) {
         privacyOptionsRequired = container.consentManager.isPrivacyOptionsRequired
         if (!canRequestAds || entitlements.value.adFree || firstSession) return
+        _adsReady.value = true
         val app = getApplication<Application>()
         AdsInitializer.ensureInitialized(app, viewModelScope) {
             container.nativeAdLoader.load()
@@ -171,7 +181,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     init {
         // adFree gekauft → laufende Native-Ad verwerfen, nichts mehr laden (§11).
         viewModelScope.launch {
-            entitlements.collect { e -> if (e.adFree) container.nativeAdLoader.clear() }
+            entitlements.collect { e ->
+                if (e.adFree) {
+                    container.nativeAdLoader.clear()
+                    _adsReady.value = false
+                }
+            }
         }
     }
 

@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -57,6 +58,9 @@ import com.jbateam.scanconvert.ui.theme.motionTween
 fun SheetScaffold(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    // 0.dp für Sheets, die direkt auf der Tastatur aufsitzen (z. B. ManualInputSheet) —
+    // sonst klafft zwischen der runden Ecke und der eckigen Tastaturkante eine Lücke.
+    bottomRadius: Dp = 42.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     // Zurück-Taste schließt das oberste Sheet (z. B. „Neue Liste") statt durchzufallen (§7).
@@ -85,6 +89,9 @@ fun SheetScaffold(
                     onClick = onDismiss,
                 )
         )
+        val sheetShape = RoundedCornerShape(
+            topStart = 28.dp, topEnd = 28.dp, bottomStart = bottomRadius, bottomEnd = bottomRadius,
+        )
         Column(
             Modifier
                 .align(Alignment.BottomCenter)
@@ -92,8 +99,8 @@ fun SheetScaffold(
                 // Hebt das gesamte Sheet dynamisch über die Tastatur (§2).
                 .imePadding()
                 .graphicsLayer { translationY = slide * size.height }
-                .shadow(20.dp, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp, bottomStart = 42.dp, bottomEnd = 42.dp))
-                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp, bottomStart = 42.dp, bottomEnd = 42.dp))
+                .shadow(20.dp, sheetShape)
+                .clip(sheetShape)
                 .background(Tokens.Surface)
                 .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 26.dp)
                 .navigationBarsPadding()

@@ -81,6 +81,7 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
     val canCreateList by vm.canCreateList.collectAsState()
     val products by vm.products.collectAsState()
     val nativeAd by vm.nativeAd.collectAsState()
+    val adsReady by vm.adsReady.collectAsState()
 
     val context = LocalContext.current
     val activity = context as? Activity
@@ -337,6 +338,8 @@ fun AppRoot(vm: MainViewModel, hasCameraPermission: Boolean, onSetLanguage: (Str
                     to = vm.to,
                     rates = rates.rates,
                     onClose = { manualInputOpen = false },
+                    isAdFree = entitlements.adFree,
+                    adsReady = adsReady,
                 )
             }
 

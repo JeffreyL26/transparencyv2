@@ -22,6 +22,7 @@ fun adProp(key: String, testDefault: String): String =
 val admobAppId = adProp("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
 val admobNativeUnitId = adProp("ADMOB_NATIVE_UNIT_ID", "ca-app-pub-3940256099942544/2247696110")
 val admobRewardedUnitId = adProp("ADMOB_REWARDED_UNIT_ID", "ca-app-pub-3940256099942544/5224354917")
+val admobBannerUnitId = adProp("ADMOB_BANNER_UNIT_ID", "ca-app-pub-3940256099942544/6300978111")
 
 android {
     namespace = "com.jbateam.scanconvert"
@@ -32,13 +33,14 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 5
-        versionName = "1.0.2"
+        versionName = "1.1.0"
 
         // AdMob-App-ID ins Manifest (Pflicht-Meta-data, sonst Crash beim Start).
         manifestPlaceholders["admobAppId"] = admobAppId
         // Ad-Unit-IDs als BuildConfig-Felder (Test-Defaults).
         buildConfigField("String", "ADMOB_NATIVE_UNIT_ID", "\"$admobNativeUnitId\"")
         buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$admobRewardedUnitId\"")
+        buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$admobBannerUnitId\"")
     }
 
     // Play-Sprach-Splits aus: sonst liefert das Bundle nur die values-*-Ordner der
@@ -127,13 +129,14 @@ tasks.matching { it.name == "preReleaseBuild" }.configureEach {
             "ADMOB_APP_ID" to admobAppId,
             "ADMOB_NATIVE_UNIT_ID" to admobNativeUnitId,
             "ADMOB_REWARDED_UNIT_ID" to admobRewardedUnitId,
+            "ADMOB_BANNER_UNIT_ID" to admobBannerUnitId,
         ).filter { (_, value) -> value.contains(testPublisher) }.map { it.first }
         if (offenders.isNotEmpty()) {
             throw GradleException(
                 "Release-Build abgebrochen: AdMob-Test-IDs ($testPublisher) aktiv für " +
                     "${offenders.joinToString(", ")}.\n" +
                     "Erwartete Keys in local.properties (oder als Gradle-Property): " +
-                    "ADMOB_APP_ID, ADMOB_NATIVE_UNIT_ID, ADMOB_REWARDED_UNIT_ID " +
+                    "ADMOB_APP_ID, ADMOB_NATIVE_UNIT_ID, ADMOB_REWARDED_UNIT_ID, ADMOB_BANNER_UNIT_ID " +
                     "(Format ADMOB_APP_ID=ca-app-pub-…~…, Unit-IDs ca-app-pub-…/…; " +
                     "keine Anführungszeichen, keine Leerzeichen um '=', keine BOM). " +
                     "Siehe CLAUDE.md §9.2 und scripts/check-admob-ids.sh."
