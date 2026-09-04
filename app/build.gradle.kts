@@ -31,8 +31,8 @@ android {
         applicationId = "com.jbateam.scanconvert"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.1"
+        versionCode = 5
+        versionName = "1.0.2"
 
         // AdMob-App-ID ins Manifest (Pflicht-Meta-data, sonst Crash beim Start).
         manifestPlaceholders["admobAppId"] = admobAppId
@@ -52,7 +52,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: Play bemängelt fehlende Verschleierung ohne Minify. Keep-Regeln
+            // für die dadurch riskanten Stellen (Room, kotlinx.serialization) stehen
+            // mit Begründung in proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
