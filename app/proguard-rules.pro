@@ -18,6 +18,17 @@
 # - Flaggen-PNGs (assets/flags/<code>.png): Assets werden von shrinkResources nicht
 #   angefasst, der Zugriff läuft ohnehin über einen Datei-Pfad, keine Resource-ID.
 
+# DataStore Preferences (data/Prefs.kt): DataStore speichert seine Werte über ein nach
+# androidx.datastore.preferences.protobuf umbenanntes protobuf-lite. Dessen Schema-
+# Reflection löst die Felder der generierten Message-Klassen über ihre ORIGINALNAMEN auf
+# (z. B. `preferences_`). Ohne Keep benennt R8 sie um (`preferences_` -> `e`) und der
+# erste DataStore-Zugriff wirft "RuntimeException: Field preferences_ for ... not found".
+# Da Prefs beim Start gelesen wird, stürzt die App dadurch sofort ab — bei JEDEM Nutzer,
+# auch bei Neuinstallationen. Genau das war die Ursache des 1.1.0-Startabsturzes.
+# DataStore bringt dafür KEINE eigenen consumer-proguard-rules mit.
+-keep class androidx.datastore.preferences.PreferencesProto** { *; }
+-keep class * extends androidx.datastore.preferences.protobuf.GeneratedMessageLite { *; }
+
 # Room (data/db/Db.kt): Room.databaseBuilder() sucht die vom Compiler generierte
 # FxDatabase_Impl zur Laufzeit über den Klassennamen (Reflection). Ohne Keep würde
 # R8 die RoomDatabase-Subklasse umbenennen/entfernen → Crash beim ersten DB-Zugriff.
